@@ -1,11 +1,11 @@
-# GROUP4_CSEB5223_OSMS
+# GROUP4_CSEB5223_OLMS
 Online Shopping Management System - CSEB5223 Software Construction &amp; Methods
 
-# 7. Function / Method Modularity
+# 7. Function / Method Modularity 
 
 The Online Shopping Management System shall apply function and method modularity to keep the source code organized, reusable, and easy to maintain.
 
-- Each function or method should perform one clear task.
+- Each function or method should perform one clear task. 
 - Large functions should be divided into smaller and reusable functions.
 - Functions and methods should use meaningful names.
 - Repeated code should be avoided by using reusable functions.
