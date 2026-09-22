@@ -1,5 +1,5 @@
-# GROUP4_CSEB5223_OSMS
-Online Shopping Management System - CSEB5223 Software Construction &amp; Methods
+# GROUP4_CSEB5223_OLMS
+Online Local Mart System - CSEB5223 Software Construction &amp; Methods
 ## 1. Construction Environment
 
 ### 1.1 System Type
@@ -26,7 +26,7 @@ flowchart LR
     Customer["Customer"]
     Admin["Administrator"]
 
-    subgraph System["Online Shopping Management System"]
+    subgraph System["Online Local Mart System"]
         direction TB
 
         C1(["Register / Login"])
