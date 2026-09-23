@@ -1,9 +1,9 @@
 # GROUP4_CSEB5223_OLMS
-Online Shopping Management System - CSEB5223 Software Construction &amp; Methods
+Online Local Mart System - CSEB5223 Software Construction &amp; Methods
 
 # 7. Function / Method Modularity 
 
-The Online Shopping Management System shall apply function and method modularity to keep the source code organized, reusable, and easy to maintain.
+The Online Local Mart System shall apply function and method modularity to keep the source code organized, reusable, and easy to maintain.
 
 - Each function or method should perform one clear task. 
 - Large functions should be divided into smaller and reusable functions.
@@ -25,7 +25,7 @@ The project team shall follow clear communication rules to ensure that tasks are
 
 # 9. Continuous Integration Rules
 
-The Online Shopping Management System shall use GitHub to manage and integrate work contributed by different team members.
+The Online Local Mart System shall use GitHub to manage and integrate work contributed by different team members.
 
 - Each team member shall work on a separate branch for their assigned tasks.
 - Team members shall not commit directly to the `main` branch.
