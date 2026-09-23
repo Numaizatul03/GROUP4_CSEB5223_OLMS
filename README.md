@@ -1,9 +1,9 @@
 # GROUP4_CSEB5223_OLMS
-Online Shopping Management System - CSEB5223 Software Construction &amp; Methods
+Online Local Mart System - CSEB5223 Software Construction &amp; Methods
 
 # 4. Documentation Format
 
-The Online Shopping Management System shall follow a consistent documentation format to ensure clarity, readability, and consistency throughout the project.
+The Online Local Mart System shall follow a consistent documentation format to ensure clarity, readability, and consistency throughout the project.
 
 ## 4.1 Documentation Standards
 
@@ -75,7 +75,7 @@ Online-Shopping-Management-System/
 ```markdown
 # 6. Naming Convention Dictionary
 
-The following naming conventions shall be used consistently throughout the Online Shopping Management System.
+The following naming conventions shall be used consistently throughout the Online Local Mart System.
 
 | Element | Naming Convention | Example |
 |---|---|---|
