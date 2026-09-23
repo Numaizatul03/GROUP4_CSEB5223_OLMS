@@ -38,7 +38,7 @@ System diagrams shall include:
 
 # 5. Coding and File Format
 
-The Online Shopping Management System shall follow consistent coding and file organization standards to improve readability, maintainability, and organization.
+The Online Local Mart System shall follow consistent coding and file organization standards to improve readability, maintainability, and organization.
 
 ## 5.1 Coding Standards
 
@@ -56,7 +56,7 @@ The Online Shopping Management System shall follow consistent coding and file or
 The project files shall be organized according to their purpose.
 
 ```text
-Online-Shopping-Management-System/
+Online-Local-Mart-System/
 ├── src/
 │   ├── models/
 │   ├── controllers/
