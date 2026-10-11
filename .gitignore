@@ -1,0 +1,11 @@
+# Local settings (each member keeps their own MySQL password here)
+src/config/config_local.php
+
+# Local SQLite database used for development/testing
+src/database/*.sqlite
+
+# Editor and OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
