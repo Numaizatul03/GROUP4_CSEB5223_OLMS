@@ -52,7 +52,16 @@ $actionLabels = [
                     </td>
                 </tr>
             <?php endforeach; ?>
-            </tbody>
+                        </tbody>
+            <tfoot>
+            <tr>
+                <td colspan="7" class="table-summary">
+                    <?= count($products) ?> product(s) &middot;
+                    <?= count(array_filter($products, static fn (Product $product) => $product->getStockStatus() === 'Low stock')) ?> low stock &middot;
+                    <?= count(array_filter($products, static fn (Product $product) => !$product->checkStock())) ?> out of stock
+                </td>
+            </tr>
+            </tfoot>
         </table>
     </div>
 <?php endif; ?>

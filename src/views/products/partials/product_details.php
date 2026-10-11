@@ -19,6 +19,8 @@
     <dt>Stock Quantity</dt>
     <dd><?= escapeHtml($productDetails['stockQuantity']) ?>
         <?php ViewService::renderPartial('products/partials/stock_badge', ['stockStatus' => $productDetails['stockStatus']]); ?></dd>
+        <dt>Stock Value</dt>
+    <dd><?= escapeHtml(formatPrice($productDetails['price'] * $productDetails['stockQuantity'])) ?></dd>
     <dt>Created</dt>
     <dd><?= escapeHtml($productDetails['createdAt']) ?></dd>
     <dt>Last Updated</dt>
