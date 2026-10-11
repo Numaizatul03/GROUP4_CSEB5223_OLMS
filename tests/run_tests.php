@@ -16,10 +16,13 @@ $testFiles = [
 ];
 
 $totalFailed = 0;
+$totalTests = 0;
 foreach ($testFiles as $suiteName => $testFilePath) {
     echo "{$suiteName}\n";
-    $totalFailed += runTests(require $testFilePath);
+    $testNames = require $testFilePath;
+    $totalTests += count($testNames);
+    $totalFailed += runTests($testNames);
 }
 
-echo $totalFailed === 0 ? "\nAll tests passed.\n" : "\n{$totalFailed} test(s) failed.\n";
+echo $totalFailed === 0 ? "\nAll {$totalTests} tests passed.\n" : "\n{$totalFailed} of {$totalTests} test(s) failed.\n";
 exit($totalFailed === 0 ? 0 : 1);

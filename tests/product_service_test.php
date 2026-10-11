@@ -99,6 +99,35 @@ function testCheckStockAndStockStatus(): void
     assertTrue(!$productService->findProductById(1)->checkStock(41), 'More than the stock amount is refused');
 }
 
+function testProductCrudWorksTogether(): void
+{
+    $productService = new ProductService(createTestConnection());
+    $productValidator = new ProductValidator();
+    $formInput = ['productName' => 'Teh Tarik Mix', 'categoryId' => '3', 'description' => '3-in-1 sachets.',
+        'price' => '8.90', 'stockQuantity' => '50'];
+
+    // Create: valid form input is saved and the full list shows it
+    assertSame([], $productValidator->validateProductInput($formInput, [1, 2, 3, 4, 5]), 'Form input should be valid');
+    $newProductId = $productService->createProduct($productValidator->toProductData($formInput));
+    assertSame(11, count($productService->getAllProducts()), 'List should show the new product');
+
+    // Search: the new product can be found by keyword
+    $searchResults = $productService->searchProduct($productValidator->toSearchCriteria(['keyword' => 'teh tarik']));
+    assertSame($newProductId, $searchResults[0]->getProductId(), 'Search should find the new product');
+
+    // Edit: the saved change is what the list shows afterwards
+    $product = $productService->findProductById($newProductId);
+    $product->updateProduct(['categoryId' => 3, 'productName' => 'Teh Tarik Mix (Big Pack)',
+        'description' => '3-in-1 sachets.', 'price' => 15.5, 'stockQuantity' => 20]);
+    $productService->updateProduct($product);
+    assertSame('Teh Tarik Mix (Big Pack)', $productService->findProductById($newProductId)->getProductName(), 'Edited name should be saved');
+
+    // Delete: the product is gone from the list and from search
+    assertTrue($productService->deleteProduct($newProductId), 'Delete should succeed');
+    assertSame(10, count($productService->getAllProducts()), 'List should no longer contain the product');
+    assertSame([], $productService->searchProduct(['productId' => $newProductId]), 'Search should now return Not found');
+}
+
 return [
     'testGetAllProductsReturnsSampleData',
     'testCreateProductSavesEveryAttribute',
@@ -108,4 +137,5 @@ return [
     'testUpdateProductSavesNewValues',
     'testDeleteProductRemovesOnlyThatProduct',
     'testCheckStockAndStockStatus',
+    'testProductCrudWorksTogether',
 ];
