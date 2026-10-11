@@ -34,7 +34,7 @@ $actionLabels = [
             </thead>
             <tbody>
             <?php foreach ($products as $product): ?>
-                <tr class="<?= $product->getProductId() === $highlightProductId ? 'is-highlighted' : '' ?>">
+                    <tr id="product-<?= $product->getProductId() ?>" class="<?= $product->getProductId() === $highlightProductId ? 'is-highlighted' : '' ?>">
                     <td class="is-number"><?= escapeHtml($product->getProductId()) ?></td>
                     <td>
                         <strong><?= escapeHtml($product->getProductName()) ?></strong>

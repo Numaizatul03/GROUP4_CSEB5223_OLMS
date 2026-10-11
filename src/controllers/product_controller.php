@@ -110,7 +110,8 @@ class ProductController
 
         SessionService::setFlashData('successMessage', 'Product #' . $newProductId . ' "' . $productData['productName'] . '" was added.');
         SessionService::setFlashData('highlightProductId', $newProductId);
-        ViewService::redirectTo(buildUrl('list'));
+        // Jump straight to the new row: it is added at the bottom of the list, off-screen.
+        ViewService::redirectTo(buildUrl('list') . '#product-' . $newProductId);
     }
 
     /**
