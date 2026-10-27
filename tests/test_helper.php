@@ -14,6 +14,14 @@ require_once __DIR__ . '/../src/services/database_service.php';
 require_once __DIR__ . '/../src/services/product_service.php';
 require_once __DIR__ . '/../src/services/category_service.php';
 require_once __DIR__ . '/../src/services/product_validator.php';
+require_once __DIR__ . '/../src/services/category_validator.php';
+require_once __DIR__ . '/../src/services/user_service.php';
+require_once __DIR__ . '/../src/services/user_validator.php';
+require_once __DIR__ . '/../src/services/auth_service.php';
+require_once __DIR__ . '/../src/services/cart_service.php';
+require_once __DIR__ . '/../src/services/order_service.php';
+require_once __DIR__ . '/../src/services/order_validator.php';
+require_once __DIR__ . '/../src/services/payment_service.php';
 
 /**
  * Function/Method Name: createTestConnection
@@ -44,6 +52,30 @@ function assertSame(mixed $expectedValue, mixed $actualValue, string $failureMes
             $failureMessage . ' (expected ' . var_export($expectedValue, true) . ', got ' . var_export($actualValue, true) . ')'
         );
     }
+}
+
+/**
+ * Function/Method Name: assertThrows
+ * Purpose:      Check that an action is refused with the expected message.
+ * Parameters:   callable $action - code that should throw BusinessRuleException
+ *               string $expectedMessagePart - text the message must contain
+ *               string $failureMessage - shown when the rule was not enforced
+ * Return Value: void
+ * Description:  Used for business rules such as "not enough stock".
+ */
+function assertThrows(callable $action, string $expectedMessagePart, string $failureMessage): void
+{
+    try {
+        $action();
+    } catch (BusinessRuleException $exception) {
+        assertTrue(
+            str_contains($exception->getMessage(), $expectedMessagePart),
+            $failureMessage . ' (wrong message: ' . $exception->getMessage() . ')'
+        );
+        return;
+    }
+
+    throw new RuntimeException($failureMessage . ' (nothing was thrown)');
 }
 
 /**

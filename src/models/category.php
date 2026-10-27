@@ -5,15 +5,18 @@ declare(strict_types=1);
 /**
  * Class Name:  Category
  * Purpose:     Represent a product category (Assignment Part 1, Section 3.5).
- * Description: Used by the Product module to group products. Full Category
- *              CRUD (addProduct(), removeProduct()) belongs to the Category
- *              module and will be added in a later lab.
+ * Description: Groups products. Administrators create, search, edit and
+ *              delete categories through CategoryService. addProduct() and
+ *              removeProduct() from the class diagram are done by choosing the
+ *              category on the product form; productCount shows how many
+ *              products a category currently holds.
  */
 class Category
 {
     private int $categoryId = 0;
     private string $categoryName = '';
     private string $description = '';
+    private int $productCount = 0;
 
     /**
      * Function/Method Name: fromDatabaseRow
@@ -28,8 +31,43 @@ class Category
         $category->setCategoryId((int) $categoryRow['category_id']);
         $category->setCategoryName((string) $categoryRow['category_name']);
         $category->setDescription((string) $categoryRow['description']);
+        $category->productCount = (int) ($categoryRow['product_count'] ?? 0);
 
         return $category;
+    }
+
+    /**
+     * Function/Method Name: getCategoryDetails
+     * Purpose:      Return all category attributes in one array.
+     * Parameters:   none
+     * Return Value: array - attribute name => value
+     * Description:  Used by the details, delete confirmation and before/after pages.
+     */
+    public function getCategoryDetails(): array
+    {
+        return [
+            'categoryId' => $this->categoryId,
+            'categoryName' => $this->categoryName,
+            'description' => $this->description,
+            'productCount' => $this->productCount,
+        ];
+    }
+
+    /**
+     * Function/Method Name: hasProducts
+     * Purpose:      Tell whether any product still uses this category.
+     * Parameters:   none
+     * Return Value: bool - true when productCount is above 0
+     * Description:  A category with products cannot be deleted (the database refuses it too).
+     */
+    public function hasProducts(): bool
+    {
+        return $this->productCount > 0;
+    }
+
+    public function getProductCount(): int
+    {
+        return $this->productCount;
     }
 
     public function getCategoryId(): int

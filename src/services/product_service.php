@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../models/product.php';
+require_once __DIR__ . '/product_validator.php';
+require_once __DIR__ . '/business_rule_exception.php';
 
 /**
  * Class Name:  ProductService
@@ -177,6 +179,62 @@ class ProductService
         $statement->execute(['productId' => $productId]);
 
         return $statement->rowCount() > 0;
+    }
+
+    /**
+     * Function/Method Name: adjustStock
+     * Purpose:      Add or remove stock for one product (Manage Inventory).
+     * Parameters:   int $productId, int $quantityChange - positive to restock, negative to write off
+     * Return Value: int - the new stock quantity
+     * Description:  Refuses a change that would make stock negative or exceed the
+     *               maximum, and refuses unknown products.
+     */
+    public function adjustStock(int $productId, int $quantityChange): int
+    {
+        $product = $this->findProductById($productId);
+        if ($product === null) {
+            throw new BusinessRuleException('Product #' . $productId . ' was not found.');
+        }
+
+        $newStockQuantity = $product->getStockQuantity() + $quantityChange;
+        if ($newStockQuantity < 0) {
+            throw new BusinessRuleException(
+                'Cannot remove ' . abs($quantityChange) . ' unit(s): only ' . $product->getStockQuantity() . ' in stock.'
+            );
+        }
+
+        if ($newStockQuantity > ProductValidator::MAX_STOCK_QUANTITY) {
+            throw new BusinessRuleException('Stock cannot be more than ' . number_format(ProductValidator::MAX_STOCK_QUANTITY) . ' units.');
+        }
+
+        $statement = $this->connection->prepare(
+            'UPDATE products SET stock_quantity = :stockQuantity, updated_at = :updatedAt WHERE product_id = :productId'
+        );
+        $statement->execute(['stockQuantity' => $newStockQuantity, 'updatedAt' => date('Y-m-d H:i:s'), 'productId' => $productId]);
+
+        return $newStockQuantity;
+    }
+
+    /**
+     * Function/Method Name: getProductsByStockLevel
+     * Purpose:      List products with the lowest stock first (Manage Inventory page).
+     * Parameters:   none
+     * Return Value: Product[] - ordered by stock quantity, then name
+     * Description:  Puts the products that need restocking at the top.
+     */
+    public function getProductsByStockLevel(): array
+    {
+        $statement = $this->connection->query(self::SELECT_PRODUCTS_SQL . ' ORDER BY p.stock_quantity, p.product_name');
+
+        return $this->mapRowsToProducts($statement->fetchAll());
+    }
+
+    public function countLowStockProducts(): int
+    {
+        $statement = $this->connection->prepare('SELECT COUNT(*) FROM products WHERE stock_quantity <= :threshold');
+        $statement->execute(['threshold' => Product::LOW_STOCK_THRESHOLD]);
+
+        return (int) $statement->fetchColumn();
     }
 
     /**

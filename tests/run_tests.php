@@ -13,6 +13,9 @@ require_once __DIR__ . '/test_helper.php';
 $testFiles = [
     'ProductService' => __DIR__ . '/product_service_test.php',
     'ProductValidator' => __DIR__ . '/product_validator_test.php',
+    'UserService' => __DIR__ . '/user_service_test.php',
+    'CategoryService' => __DIR__ . '/category_service_test.php',
+    'Cart, Order and Payment' => __DIR__ . '/cart_order_payment_test.php',
 ];
 
 $totalFailed = 0;
