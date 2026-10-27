@@ -6,11 +6,32 @@ declare(strict_types=1);
  * Class Name:  ViewService
  * Purpose:     Render view templates inside the shared page layout and redirect.
  * Description: Controllers pass data to a view by name, so no HTML is written
- *              inside controllers or services.
+ *              inside controllers or services. Layout data (the logged-in user,
+ *              cart count, current page) is set once by index.php and is
+ *              available to every page.
  */
 class ViewService
 {
     private const VIEWS_PATH = __DIR__ . '/../views/';
+
+    private static array $layoutData = [
+        'currentUser' => null,
+        'cartItemCount' => 0,
+        'currentAction' => '',
+        'currentSection' => '',
+    ];
+
+    /**
+     * Function/Method Name: setLayoutData
+     * Purpose:      Give the page layout the values every page needs.
+     * Parameters:   array $layoutData - currentUser, cartItemCount, currentAction, currentSection
+     * Return Value: void
+     * Description:  Called by index.php before the controller runs.
+     */
+    public static function setLayoutData(array $layoutData): void
+    {
+        self::$layoutData = $layoutData + self::$layoutData;
+    }
 
     /**
      * Function/Method Name: renderView
@@ -22,7 +43,7 @@ class ViewService
      */
     public static function renderView(string $viewName, array $viewData = []): void
     {
-        extract($viewData, EXTR_SKIP);
+        extract($viewData + self::$layoutData, EXTR_SKIP);
 
         require self::VIEWS_PATH . 'layout/header.php';
         require self::VIEWS_PATH . $viewName . '.php';
@@ -70,6 +91,24 @@ function formatPrice(float $price): string
 }
 
 /**
+ * Function/Method Name: formatDateTime
+ * Purpose:      Show a database date-time in a friendly way.
+ * Parameters:   ?string $dateTime - value such as "2026-10-25 20:05:00"
+ * Return Value: string - e.g. "25 Oct 2026, 8:05 PM", or "-" when empty
+ * Description:  Used for order, payment and account dates.
+ */
+function formatDateTime(?string $dateTime): string
+{
+    if ($dateTime === null || $dateTime === '') {
+        return '-';
+    }
+
+    $timestamp = strtotime($dateTime);
+
+    return $timestamp === false ? $dateTime : date('j M Y, g:i A', $timestamp);
+}
+
+/**
  * Function/Method Name: buildUrl
  * Purpose:      Build a link to a page of the system.
  * Parameters:   string $action - route name, e.g. "edit"
@@ -81,4 +120,16 @@ function formatPrice(float $price): string
 function buildUrl(string $action, array $parameters = []): string
 {
     return 'index.php?' . http_build_query(['action' => $action] + $parameters);
+}
+
+/**
+ * Function/Method Name: fieldErrorHtml
+ * Purpose:      Print a form field's error message, if it has one.
+ * Parameters:   array $errors - field name => message; string $fieldName
+ * Return Value: string - a <p class="field-error"> element, or "" when there is no error
+ * Description:  Keeps every form's error markup identical.
+ */
+function fieldErrorHtml(array $errors, string $fieldName): string
+{
+    return isset($errors[$fieldName]) ? '<p class="field-error">' . escapeHtml($errors[$fieldName]) . '</p>' : '';
 }

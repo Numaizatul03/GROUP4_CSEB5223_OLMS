@@ -71,6 +71,25 @@ function setUpAutoDismissAlerts() {
     });
 }
 
+/**
+ * Function/Method Name: setUpConfirmForms
+ * Purpose:      Ask "Are you sure?" before forms that change money or orders.
+ * Parameters:   none
+ * Return Value: none
+ * Description:  Applies to forms with a data-confirm attribute (cancel order,
+ *               refund, clear cart). Without JavaScript the form still works.
+ */
+function setUpConfirmForms() {
+    document.querySelectorAll('form[data-confirm]').forEach((form) => {
+        form.addEventListener('submit', (submitEvent) => {
+            if (!window.confirm(form.dataset.confirm)) {
+                submitEvent.preventDefault();
+            }
+        });
+    });
+}
+
 addCharacterCounters();
 setUpProductForms();
 setUpAutoDismissAlerts();
+setUpConfirmForms();
