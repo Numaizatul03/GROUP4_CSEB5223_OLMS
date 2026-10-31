@@ -5,6 +5,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../models/product.php';
 require_once __DIR__ . '/product_validator.php';
 require_once __DIR__ . '/business_rule_exception.php';
+require_once __DIR__ . '/code_generator.php';
 
 /**
  * Class Name:  ProductService
@@ -18,17 +19,19 @@ require_once __DIR__ . '/business_rule_exception.php';
  */
 class ProductService
 {
-    private const SELECT_PRODUCTS_SQL = 'SELECT p.product_id, p.category_id, c.category_name, p.product_name,
+    private const SELECT_PRODUCTS_SQL = 'SELECT p.product_id, p.product_code, p.category_id, c.category_name, p.product_name,
                 p.description, p.price, p.stock_quantity, p.created_at, p.updated_at, p.deleted_at
             FROM products p
             INNER JOIN categories c ON c.category_id = p.category_id';
     private const NOT_DELETED_SQL = 'p.deleted_at IS NULL';
 
     private PDO $connection;
+    private CodeGenerator $codeGenerator;
 
-    public function __construct(PDO $connection)
+    public function __construct(PDO $connection, ?CodeGenerator $codeGenerator = null)
     {
         $this->connection = $connection;
+        $this->codeGenerator = $codeGenerator ?? new CodeGenerator();
     }
 
     /**
@@ -84,7 +87,8 @@ class ProductService
         }
 
         if (($searchCriteria['keyword'] ?? '') !== '') {
-            $conditions[] = '(p.product_name LIKE :keywordName OR p.description LIKE :keywordDescription)';
+            $conditions[] = '(p.product_code LIKE :keywordCode OR p.product_name LIKE :keywordName OR p.description LIKE :keywordDescription)';
+            $parameters['keywordCode'] = '%' . $searchCriteria['keyword'] . '%';
             $parameters['keywordName'] = '%' . $searchCriteria['keyword'] . '%';
             $parameters['keywordDescription'] = '%' . $searchCriteria['keyword'] . '%';
         }
@@ -119,17 +123,19 @@ class ProductService
      *               description, price, stockQuantity)
      * Return Value: int - ID of the newly created product
      * Description:  Data must be validated by ProductValidator before calling this.
+     *               The product code (e.g. FRP-004) is assigned automatically.
      *               Timestamps are set in PHP so they use APP_TIMEZONE on any database.
      */
     public function createProduct(array $productData): int
     {
         $statement = $this->connection->prepare(
-            'INSERT INTO products (category_id, product_name, description, price, stock_quantity, created_at, updated_at)
-             VALUES (:categoryId, :productName, :description, :price, :stockQuantity, :createdAt, :updatedAt)'
+            'INSERT INTO products (category_id, product_code, product_name, description, price, stock_quantity, created_at, updated_at)
+             VALUES (:categoryId, :productCode, :productName, :description, :price, :stockQuantity, :createdAt, :updatedAt)'
         );
         $currentTime = date('Y-m-d H:i:s');
         $statement->execute([
             'categoryId' => $productData['categoryId'],
+            'productCode' => $this->makeNextProductCode($productData['categoryId']),
             'productName' => $productData['productName'],
             'description' => $productData['description'],
             'price' => $productData['price'],
@@ -147,17 +153,20 @@ class ProductService
      * Parameters:   Product $product - product object that already holds the new values
      * Return Value: bool - true when the product row was found and saved
      * Description:  Also refreshes updated_at so the change time can be shown to the user.
+     *               A product moved to another category gets a new code in that
+     *               category (FRP-003 -> BAK-003), because the code shows its group.
      */
     public function updateProduct(Product $product): bool
     {
         $statement = $this->connection->prepare(
             'UPDATE products
-             SET category_id = :categoryId, product_name = :productName, description = :description,
-                 price = :price, stock_quantity = :stockQuantity, updated_at = :updatedAt
+             SET category_id = :categoryId, product_code = :productCode, product_name = :productName,
+                 description = :description, price = :price, stock_quantity = :stockQuantity, updated_at = :updatedAt
              WHERE product_id = :productId AND deleted_at IS NULL'
         );
         $statement->execute([
             'categoryId' => $product->getCategoryId(),
+            'productCode' => $this->findProductCodeForCategory((int) $product->getProductId(), $product->getCategoryId()),
             'productName' => $product->getProductName(),
             'description' => $product->getDescription(),
             'price' => $product->getPrice(),
@@ -341,6 +350,50 @@ class ProductService
     public function countProducts(): int
     {
         return (int) $this->connection->query('SELECT COUNT(*) FROM products WHERE deleted_at IS NULL')->fetchColumn();
+    }
+
+    /**
+     * Function/Method Name: makeNextProductCode
+     * Purpose:      Create the next free product code in a category.
+     * Parameters:   int $categoryId - the product's category
+     * Return Value: string - e.g. "FRP-004"
+     * Description:  Looks at every code already used in the category, including
+     *               products in Delete History, so a restored product never clashes.
+     */
+    private function makeNextProductCode(int $categoryId): string
+    {
+        $statement = $this->connection->prepare('SELECT category_code FROM categories WHERE category_id = :categoryId');
+        $statement->execute(['categoryId' => $categoryId]);
+        $categoryCode = $statement->fetchColumn();
+        if ($categoryCode === false) {
+            throw new BusinessRuleException('Please choose a category from the list.');
+        }
+
+        $statement = $this->connection->prepare('SELECT product_code FROM products WHERE product_code LIKE :codePrefix');
+        $statement->execute(['codePrefix' => $categoryCode . '-%']);
+        $usedNumbers = array_map(fn (string $productCode) => $this->codeGenerator->readProductNumber($productCode), $statement->fetchAll(PDO::FETCH_COLUMN));
+
+        return $this->codeGenerator->makeProductCode((string) $categoryCode, $usedNumbers === [] ? 0 : max($usedNumbers));
+    }
+
+    /**
+     * Function/Method Name: findProductCodeForCategory
+     * Purpose:      Keep a product's code, or give it a new one when its category changed.
+     * Parameters:   int $productId, int $newCategoryId
+     * Return Value: string - the code to save
+     * Description:  Codes are stable; they only change when the product moves group.
+     */
+    private function findProductCodeForCategory(int $productId, int $newCategoryId): string
+    {
+        $statement = $this->connection->prepare('SELECT category_id, product_code FROM products WHERE product_id = :productId');
+        $statement->execute(['productId' => $productId]);
+        $currentRow = $statement->fetch();
+
+        if ($currentRow !== false && (int) $currentRow['category_id'] === $newCategoryId) {
+            return (string) $currentRow['product_code'];
+        }
+
+        return $this->makeNextProductCode($newCategoryId);
     }
 
     /**

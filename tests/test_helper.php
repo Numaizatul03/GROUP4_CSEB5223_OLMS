@@ -22,6 +22,7 @@ require_once __DIR__ . '/../src/services/cart_service.php';
 require_once __DIR__ . '/../src/services/order_service.php';
 require_once __DIR__ . '/../src/services/order_validator.php';
 require_once __DIR__ . '/../src/services/payment_service.php';
+require_once __DIR__ . '/../src/services/code_generator.php';
 
 /**
  * Function/Method Name: createTestConnection

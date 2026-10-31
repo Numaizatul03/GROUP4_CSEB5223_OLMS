@@ -19,6 +19,7 @@
                 <thead>
                 <tr>
                     <th class="is-number">ID</th>
+                    <th>Code</th>
                     <th>Product Name</th>
                     <th>Category</th>
                     <th class="is-number">Price</th>
@@ -31,6 +32,7 @@
                 <?php foreach ($deletedProducts as $product): ?>
                     <tr>
                         <td class="is-number"><?= escapeHtml($product->getProductId()) ?></td>
+                        <td><span class="code-tag"><?= escapeHtml($product->getProductCode()) ?></span></td>
                         <td><strong><?= escapeHtml($product->getProductName()) ?></strong>
                             <span class="cell-note"><?= escapeHtml($product->getDescription()) ?></span></td>
                         <td><?= escapeHtml($product->getCategoryName()) ?></td>

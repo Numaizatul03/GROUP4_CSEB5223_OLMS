@@ -6,7 +6,8 @@
  */
 ?>
 <div class="alert alert--info">
-    Product found: <strong>#<?= escapeHtml($product->getProductId()) ?> <?= escapeHtml($product->getProductName()) ?></strong>.
+    Product found: <strong>#<?= escapeHtml($product->getProductId()) ?> <?= escapeHtml($product->getProductName()) ?></strong>
+    (code <span class="code-tag"><?= escapeHtml($product->getProductCode()) ?></span>). Moving it to another category gives it a new code in that category.
     Change the fields below and press <em>Save Changes</em>.
 </div>
 <?php ViewService::renderPartial('products/partials/product_form', [

@@ -77,6 +77,14 @@ Table 2: Create, read, update and delete for every class
   Cash on Delivery stays Pending until verified or delivered. No card or bank details are ever asked for.
   The amount always comes from the saved order, never from the form.
 - **Refunds:** cancelling a paid order refunds the payment; a payment cannot be refunded twice.
+- **Readable codes:** categories and products keep their numeric IDs as database keys, and also get a
+  code made automatically by `CodeGenerator` (`src/services/code_generator.php`):
+  - Category code from the name: one word -> first 3 letters (Bakery -> BAK); two or more words ->
+    2 letters + 1 letter (Fresh Produce -> FRP). A clash gets a number (FRF, FRF2).
+  - Product code = category code + running number in that category (FRP-001, FRP-002).
+  - Codes never change on rename. A product moved to another category gets the next code there
+    (FRP-003 -> PAN-003). Codes of products in Delete History are never reused.
+  - Product and category searches also match codes.
 - **Product Delete History:** deleting a product is a soft delete (`deleted_at` is set). It disappears from the shop, lists,
   searches and carts, keeps its ID, and can be restored or deleted permanently from Products → Delete History.
   A category cannot be deleted while Delete History still holds its products.
@@ -111,7 +119,7 @@ a logged-in user opening the other role's page gets HTTP 403. Customers can only
 
 ## 7. Tests
 
-`php tests/run_tests.php` runs 35 tests in 5 suites: ProductService, ProductValidator,
+`php tests/run_tests.php` runs 42 tests in 6 suites: ProductService, ProductValidator,
 UserService (registration, login, profile, customer management), CategoryService, and
 Cart, Order and Payment (cart rules, checkout rollback, payment methods, status flow,
-cancellation restock, refunds, inventory).
+cancellation restock, refunds, inventory) and Category and Product Codes.

@@ -15,6 +15,7 @@ class Product
     public const LOW_STOCK_THRESHOLD = 5;
 
     private ?int $productId = null;
+    private string $productCode = '';
     private int $categoryId = 0;
     private string $categoryName = '';
     private string $productName = '';
@@ -37,6 +38,7 @@ class Product
     {
         $product = new Product();
         $product->setProductId((int) $productRow['product_id']);
+        $product->productCode = (string) ($productRow['product_code'] ?? '');
         $product->setCategoryId((int) $productRow['category_id']);
         $product->setCategoryName((string) ($productRow['category_name'] ?? ''));
         $product->setProductName((string) $productRow['product_name']);
@@ -62,6 +64,7 @@ class Product
     {
         return [
             'productId' => $this->productId,
+            'productCode' => $this->productCode,
             'productName' => $this->productName,
             'categoryName' => $this->categoryName,
             'description' => $this->description,
@@ -118,6 +121,18 @@ class Product
         }
 
         return $this->stockQuantity <= self::LOW_STOCK_THRESHOLD ? 'Low stock' : 'In stock';
+    }
+
+    /**
+     * Function/Method Name: getProductCode
+     * Purpose:      Return the readable product code (e.g. "FRP-001").
+     * Parameters:   none
+     * Return Value: string
+     * Description:  Category code + running number; assigned by ProductService.
+     */
+    public function getProductCode(): string
+    {
+        return $this->productCode;
     }
 
     public function getProductId(): ?int

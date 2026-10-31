@@ -8,7 +8,11 @@ $isEditing = $category !== null;
 ?>
 <?php if ($isEditing): ?>
     <div class="alert alert--info">Category found: <strong>#<?= $category->getCategoryId() ?> <?= escapeHtml($category->getCategoryName()) ?></strong>
-        (<?= $category->getProductCount() ?> product(s)). Change the fields below and press <em>Save Changes</em>.</div>
+        (code <span class="code-tag"><?= escapeHtml($category->getCategoryCode()) ?></span>, <?= $category->getProductCount() ?> product(s)).
+        Change the fields below and press <em>Save Changes</em>. The code stays the same if you rename the category.</div>
+<?php endif; ?>
+<?php if (!$isEditing): ?>
+    <p class="page__lead">A category code (e.g. <span class="code-tag">FRF</span> for Frozen Food) is made automatically from the name.</p>
 <?php endif; ?>
 <?php if ($validationErrors !== []): ?>
     <div class="alert alert--error" role="alert"><strong>Please fix <?= count($validationErrors) ?> problem(s) below.</strong></div>

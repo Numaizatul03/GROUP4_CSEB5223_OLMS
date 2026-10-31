@@ -11,7 +11,7 @@ $isInStock = $product->checkStock();
         <?= escapeHtml(mb_strtoupper(mb_substr($product->getProductName(), 0, 1))) ?>
     </div>
     <section class="card product-detail__info">
-        <span class="product-card__category"><?= escapeHtml($product->getCategoryName()) ?></span>
+        <span class="product-card__category"><?= escapeHtml($product->getCategoryName()) ?> &middot; Code <?= escapeHtml($product->getProductCode()) ?></span>
         <p class="product-detail__price"><?= escapeHtml(formatPrice($product->getPrice())) ?></p>
         <p><?= nl2br(escapeHtml($product->getDescription())) ?></p>
         <p>

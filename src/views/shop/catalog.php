@@ -43,7 +43,7 @@ $categoryFilterUrl = static fn (string $categoryId): string =>
                 <span class="product-card__swatch product-card__swatch--<?= $product->getCategoryId() % 3 ?>" aria-hidden="true">
                     <?= escapeHtml(mb_strtoupper(mb_substr($product->getProductName(), 0, 1))) ?>
                 </span>
-                <span class="product-card__category"><?= escapeHtml($product->getCategoryName()) ?></span>
+                <span class="product-card__category"><?= escapeHtml($product->getProductCode()) ?> &middot; <?= escapeHtml($product->getCategoryName()) ?></span>
                 <strong class="product-card__name"><?= escapeHtml($product->getProductName()) ?></strong>
                 <span class="product-card__footer">
                     <span class="product-card__price"><?= escapeHtml(formatPrice($product->getPrice())) ?></span>

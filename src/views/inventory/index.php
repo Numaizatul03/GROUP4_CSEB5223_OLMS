@@ -11,12 +11,13 @@
     <div class="table-wrap">
         <table class="data-table">
             <thead>
-            <tr><th class="is-number">ID</th><th>Product</th><th>Category</th><th class="is-number">In stock</th><th>Status</th><th>Adjust stock</th></tr>
+            <tr><th class="is-number">ID</th><th>Code</th><th>Product</th><th>Category</th><th class="is-number">In stock</th><th>Status</th><th>Adjust stock</th></tr>
             </thead>
             <tbody>
             <?php foreach ($products as $product): ?>
                 <tr id="product-<?= $product->getProductId() ?>" class="<?= $product->getProductId() === $highlightProductId ? 'is-highlighted' : '' ?>">
                     <td class="is-number"><?= $product->getProductId() ?></td>
+                    <td><span class="code-tag"><?= escapeHtml($product->getProductCode()) ?></span></td>
                     <td><strong><?= escapeHtml($product->getProductName()) ?></strong></td>
                     <td><?= escapeHtml($product->getCategoryName()) ?></td>
                     <td class="is-number"><?= $product->getStockQuantity() ?></td>

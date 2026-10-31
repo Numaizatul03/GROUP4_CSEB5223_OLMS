@@ -40,15 +40,20 @@ CREATE TABLE users (
 
 CREATE TABLE categories (
     category_id   INT UNSIGNED  NOT NULL AUTO_INCREMENT,
+    -- Readable code made from the name (Fresh Produce -> FRP); category_id stays the key
+    category_code VARCHAR(10)   NOT NULL,
     category_name VARCHAR(50)   NOT NULL,
     description   VARCHAR(255)  NOT NULL DEFAULT '',
     PRIMARY KEY (category_id),
+    UNIQUE KEY uq_categories_category_code (category_code),
     UNIQUE KEY uq_categories_category_name (category_name)
 ) ENGINE = InnoDB;
 
 CREATE TABLE products (
     product_id     INT UNSIGNED   NOT NULL AUTO_INCREMENT,
     category_id    INT UNSIGNED   NOT NULL,
+    -- Readable code: category code + running number (FRP-001); product_id stays the key
+    product_code   VARCHAR(20)    NOT NULL,
     product_name   VARCHAR(100)   NOT NULL,
     description    TEXT           NOT NULL,
     price          DECIMAL(10, 2) NOT NULL,
@@ -58,6 +63,7 @@ CREATE TABLE products (
     -- Soft delete: a deleted product keeps its row (and ID) and can be restored from Delete History
     deleted_at     DATETIME       NULL DEFAULT NULL,
     PRIMARY KEY (product_id),
+    UNIQUE KEY uq_products_product_code (product_code),
     KEY idx_products_product_name (product_name),
     CONSTRAINT fk_products_category_id FOREIGN KEY (category_id)
         REFERENCES categories (category_id)
@@ -146,24 +152,24 @@ INSERT INTO users (name, email, password_hash, role, shipping_address, phone_num
     ('Daniel Lim Wei Jie', 'daniel@olms.test',  '$2y$10$Q72vK.GS//t9Vt7GhiXP1uRzvis5amMD254oGp.CqITB18gC/TPXK', 'customer', '8-2, Residensi Seri Putra, Jalan Putra 5, 43300 Seri Kembangan, Selangor', '017-2223344'),
     ('Kavitha a/p Raj', 'kavitha@olms.test',    '$2y$10$Q72vK.GS//t9Vt7GhiXP1uRzvis5amMD254oGp.CqITB18gC/TPXK', 'customer', '45, Lorong Cempaka 2, 41200 Klang, Selangor', '019-8765432');
 
-INSERT INTO categories (category_name, description) VALUES
-    ('Fresh Produce', 'Vegetables, fruits and eggs from local farms'),
-    ('Bakery',        'Bread, buns and kuih baked daily'),
-    ('Beverages',     'Coffee, tea, juices and drinking water'),
-    ('Pantry',        'Rice, cooking oil, sauces and dry goods'),
-    ('Household',     'Cleaning and everyday household items');
+INSERT INTO categories (category_code, category_name, description) VALUES
+    ('FRP', 'Fresh Produce', 'Vegetables, fruits and eggs from local farms'),
+    ('BAK', 'Bakery',        'Bread, buns and kuih baked daily'),
+    ('BEV', 'Beverages',     'Coffee, tea, juices and drinking water'),
+    ('PAN', 'Pantry',        'Rice, cooking oil, sauces and dry goods'),
+    ('HOU', 'Household',     'Cleaning and everyday household items');
 
-INSERT INTO products (category_id, product_name, description, price, stock_quantity) VALUES
-    (1, 'Kampung Eggs (Tray of 10)',   'Free-range kampung chicken eggs from a farm in Kuala Selangor.', 7.90, 40),
-    (1, 'Fresh Kangkung 250g',         'Water spinach harvested the same morning. Best for belacan stir-fry.', 2.50, 25),
-    (1, 'Cameron Highlands Tomatoes 500g', 'Firm red tomatoes grown in Cameron Highlands.', 4.20, 3),
-    (2, 'Wholemeal Bread Loaf',        'Soft wholemeal sandwich loaf, 400g, no preservatives.', 4.80, 18),
-    (2, 'Kaya Puff (Pack of 6)',       'Flaky pastry filled with homemade pandan kaya.', 6.00, 12),
-    (3, 'Kopi O Powder 500g',          'Traditional roasted coffee powder from a family roaster in Ipoh.', 12.90, 30),
-    (3, 'Mineral Water 1.5L',          'Natural mineral water, single bottle.', 1.60, 120),
-    (4, 'Local White Rice 5kg',        'Premium local white rice from Sekinchan paddy fields.', 26.50, 15),
-    (4, 'Homemade Sambal Paste 250g',  'Spicy chilli sambal made with dried shrimp. Keep refrigerated.', 9.50, 0),
-    (5, 'Dishwashing Liquid 900ml',    'Lime-scented dishwashing liquid, gentle on hands.', 5.30, 22);
+INSERT INTO products (category_id, product_code, product_name, description, price, stock_quantity) VALUES
+    (1, 'FRP-001', 'Kampung Eggs (Tray of 10)',   'Free-range kampung chicken eggs from a farm in Kuala Selangor.', 7.90, 40),
+    (1, 'FRP-002', 'Fresh Kangkung 250g',         'Water spinach harvested the same morning. Best for belacan stir-fry.', 2.50, 25),
+    (1, 'FRP-003', 'Cameron Highlands Tomatoes 500g', 'Firm red tomatoes grown in Cameron Highlands.', 4.20, 3),
+    (2, 'BAK-001', 'Wholemeal Bread Loaf',        'Soft wholemeal sandwich loaf, 400g, no preservatives.', 4.80, 18),
+    (2, 'BAK-002', 'Kaya Puff (Pack of 6)',       'Flaky pastry filled with homemade pandan kaya.', 6.00, 12),
+    (3, 'BEV-001', 'Kopi O Powder 500g',          'Traditional roasted coffee powder from a family roaster in Ipoh.', 12.90, 30),
+    (3, 'BEV-002', 'Mineral Water 1.5L',          'Natural mineral water, single bottle.', 1.60, 120),
+    (4, 'PAN-001', 'Local White Rice 5kg',        'Premium local white rice from Sekinchan paddy fields.', 26.50, 15),
+    (4, 'PAN-002', 'Homemade Sambal Paste 250g',  'Spicy chilli sambal made with dried shrimp. Keep refrigerated.', 9.50, 0),
+    (5, 'HOU-001', 'Dishwashing Liquid 900ml',    'Lime-scented dishwashing liquid, gentle on hands.', 5.30, 22);
 
 INSERT INTO orders (user_id, order_date, total_amount, order_status, shipping_address, updated_at) VALUES
     (2, '2026-10-20 10:15:00', 28.70, 'Delivered', '12, Jalan Mawar 3, Taman Bukit Indah, 43000 Kajang, Selangor', '2026-10-22 16:40:00'),

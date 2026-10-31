@@ -16,6 +16,7 @@ $testFiles = [
     'UserService' => __DIR__ . '/user_service_test.php',
     'CategoryService' => __DIR__ . '/category_service_test.php',
     'Cart, Order and Payment' => __DIR__ . '/cart_order_payment_test.php',
+    'Category and Product Codes' => __DIR__ . '/code_generator_test.php',
 ];
 
 $totalFailed = 0;

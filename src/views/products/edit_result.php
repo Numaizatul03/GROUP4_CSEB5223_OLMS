@@ -7,6 +7,7 @@
  *           Product[] $products, int $highlightProductId
  */
 $comparedFields = [
+    'productCode' => 'Product Code',
     'productName' => 'Product Name',
     'categoryName' => 'Category',
     'description' => 'Description',

@@ -15,8 +15,8 @@
             <?= fieldErrorHtml($searchErrors, 'categoryId') ?>
         </div>
         <div class="form__row">
-            <label for="keyword">Name or description contains</label>
-            <input type="search" id="keyword" name="keyword" value="<?= escapeHtml($searchInput['keyword'] ?? '') ?>" placeholder="e.g. bakery">
+            <label for="keyword">Name, code or description contains</label>
+            <input type="search" id="keyword" name="keyword" value="<?= escapeHtml($searchInput['keyword'] ?? '') ?>" placeholder="e.g. bakery or BAK">
         </div>
     </div>
     <div class="form__actions">

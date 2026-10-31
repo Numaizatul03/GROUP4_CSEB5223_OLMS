@@ -236,6 +236,7 @@ class CategoryController extends BaseController
     {
         return [
             'Category ID' => (string) $category->getCategoryId(),
+            'Category Code' => $category->getCategoryCode(),
             'Category Name' => $category->getCategoryName(),
             'Description' => $category->getDescription() === '' ? '-' : $category->getDescription(),
             'Products in category' => (string) $category->getProductCount(),

@@ -4,26 +4,30 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../models/category.php';
 require_once __DIR__ . '/business_rule_exception.php';
+require_once __DIR__ . '/code_generator.php';
 
 /**
  * Class Name:  CategoryService
  * Purpose:     Create, read, update, delete and search product categories.
  * Description: All SQL for the categories table is kept here. Each category is
- *              read together with the number of products that use it.
+ *              read together with the number of products that use it. New
+ *              categories get a readable code (e.g. "FRP") from CodeGenerator.
  */
 class CategoryService
 {
-    private const SELECT_CATEGORIES_SQL = 'SELECT c.category_id, c.category_name, c.description,
+    private const SELECT_CATEGORIES_SQL = 'SELECT c.category_id, c.category_code, c.category_name, c.description,
                 COUNT(p.product_id) AS product_count
             FROM categories c
             LEFT JOIN products p ON p.category_id = c.category_id AND p.deleted_at IS NULL';
-    private const GROUP_CATEGORIES_SQL = ' GROUP BY c.category_id, c.category_name, c.description';
+    private const GROUP_CATEGORIES_SQL = ' GROUP BY c.category_id, c.category_code, c.category_name, c.description';
 
     private PDO $connection;
+    private CodeGenerator $codeGenerator;
 
-    public function __construct(PDO $connection)
+    public function __construct(PDO $connection, ?CodeGenerator $codeGenerator = null)
     {
         $this->connection = $connection;
+        $this->codeGenerator = $codeGenerator ?? new CodeGenerator();
     }
 
     /**
@@ -82,7 +86,8 @@ class CategoryService
         }
 
         if (($searchCriteria['keyword'] ?? '') !== '') {
-            $conditions[] = '(c.category_name LIKE :keywordName OR c.description LIKE :keywordDescription)';
+            $conditions[] = '(c.category_code LIKE :keywordCode OR c.category_name LIKE :keywordName OR c.description LIKE :keywordDescription)';
+            $parameters['keywordCode'] = '%' . $searchCriteria['keyword'] . '%';
             $parameters['keywordName'] = '%' . $searchCriteria['keyword'] . '%';
             $parameters['keywordDescription'] = '%' . $searchCriteria['keyword'] . '%';
         }
@@ -121,14 +126,17 @@ class CategoryService
      * Purpose:      Insert a new category.
      * Parameters:   array $categoryData - categoryName, description (validated)
      * Return Value: int - ID of the new category
-     * Description:  Data must be validated by CategoryValidator first.
+     * Description:  Data must be validated by CategoryValidator first. The category
+     *               code is generated from the name and is never typed by the user.
      */
     public function createCategory(array $categoryData): int
     {
+        $takenCodes = $this->connection->query('SELECT category_code FROM categories')->fetchAll(PDO::FETCH_COLUMN);
         $statement = $this->connection->prepare(
-            'INSERT INTO categories (category_name, description) VALUES (:categoryName, :description)'
+            'INSERT INTO categories (category_code, category_name, description) VALUES (:categoryCode, :categoryName, :description)'
         );
         $statement->execute([
+            'categoryCode' => $this->codeGenerator->makeCategoryCode($categoryData['categoryName'], $takenCodes),
             'categoryName' => $categoryData['categoryName'],
             'description' => $categoryData['description'],
         ]);

@@ -14,6 +14,7 @@ declare(strict_types=1);
 class Category
 {
     private int $categoryId = 0;
+    private string $categoryCode = '';
     private string $categoryName = '';
     private string $description = '';
     private int $productCount = 0;
@@ -29,6 +30,7 @@ class Category
     {
         $category = new Category();
         $category->setCategoryId((int) $categoryRow['category_id']);
+        $category->categoryCode = (string) ($categoryRow['category_code'] ?? '');
         $category->setCategoryName((string) $categoryRow['category_name']);
         $category->setDescription((string) $categoryRow['description']);
         $category->productCount = (int) ($categoryRow['product_count'] ?? 0);
@@ -47,6 +49,7 @@ class Category
     {
         return [
             'categoryId' => $this->categoryId,
+            'categoryCode' => $this->categoryCode,
             'categoryName' => $this->categoryName,
             'description' => $this->description,
             'productCount' => $this->productCount,
@@ -68,6 +71,19 @@ class Category
     public function getProductCount(): int
     {
         return $this->productCount;
+    }
+
+    /**
+     * Function/Method Name: getCategoryCode
+     * Purpose:      Return the readable category code (e.g. "FRP").
+     * Parameters:   none
+     * Return Value: string
+     * Description:  Made once by CodeGenerator when the category is created and never
+     *               changed afterwards, even if the category is renamed.
+     */
+    public function getCategoryCode(): string
+    {
+        return $this->categoryCode;
     }
 
     public function getCategoryId(): int

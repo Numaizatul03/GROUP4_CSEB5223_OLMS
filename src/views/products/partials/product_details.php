@@ -8,6 +8,8 @@
 <dl class="detail-list">
     <dt>Product ID</dt>
     <dd><?= escapeHtml($productDetails['productId']) ?></dd>
+    <dt>Product Code</dt>
+    <dd><span class="code-tag"><?= escapeHtml($productDetails['productCode']) ?></span></dd>
     <dt>Product Name</dt>
     <dd><?= escapeHtml($productDetails['productName']) ?></dd>
     <dt>Category</dt>

@@ -24,6 +24,7 @@ $actionLabels = [
             <thead>
             <tr>
                 <th class="is-number">ID</th>
+                <th>Code</th>
                 <th>Product Name</th>
                 <th>Category</th>
                 <th class="is-number">Price</th>
@@ -36,6 +37,7 @@ $actionLabels = [
             <?php foreach ($products as $product): ?>
                     <tr id="product-<?= $product->getProductId() ?>" class="<?= $product->getProductId() === $highlightProductId ? 'is-highlighted' : '' ?>">
                     <td class="is-number"><?= escapeHtml($product->getProductId()) ?></td>
+                    <td><span class="code-tag"><?= escapeHtml($product->getProductCode()) ?></span></td>
                     <td>
                         <strong><?= escapeHtml($product->getProductName()) ?></strong>
                         <span class="cell-note"><?= escapeHtml($product->getDescription()) ?></span>
@@ -55,7 +57,7 @@ $actionLabels = [
                         </tbody>
             <tfoot>
             <tr>
-                <td colspan="7" class="table-summary">
+                <td colspan="8" class="table-summary">
                     <?= count($products) ?> product(s) &middot;
                     <?= count(array_filter($products, static fn (Product $product) => $product->getStockStatus() === 'Low stock')) ?> low stock &middot;
                     <?= count(array_filter($products, static fn (Product $product) => !$product->checkStock())) ?> out of stock
