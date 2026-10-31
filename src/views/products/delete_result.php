@@ -11,7 +11,8 @@
 <div class="alert <?= $isDeletionVerified ? 'alert--success' : 'alert--error' ?>" role="status">
     <?php if ($isDeletionVerified): ?>
         Product #<?= escapeHtml($deletedProductDetails['productId']) ?>
-        "<?= escapeHtml($deletedProductDetails['productName']) ?>" was deleted.
+        "<?= escapeHtml($deletedProductDetails['productName']) ?>" was deleted and moved to
+        <a href="<?= escapeHtml(buildUrl('product_history')) ?>">Delete History</a>, where it can be restored.
     <?php else: ?>
         Product #<?= escapeHtml($deletedProductDetails['productId']) ?> could not be deleted. Please try again.
     <?php endif; ?>
@@ -22,7 +23,7 @@
     <div class="stat"><span class="stat__label">Products after</span><span class="stat__value"><?= $productCountAfter ?></span></div>
     <div class="stat">
         <span class="stat__label">Database check</span>
-        <span class="stat__value stat__value--text"><?= $isDeletionVerified ? 'Product ID no longer exists' : 'Product still exists' ?></span>
+        <span class="stat__value stat__value--text"><?= $isDeletionVerified ? 'No longer listed or for sale' : 'Product still listed' ?></span>
     </div>
 </div>
 

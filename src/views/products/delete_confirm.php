@@ -7,7 +7,7 @@
 ?>
 <div class="alert alert--warning" role="alert">
     <strong>Are you sure you want to delete this product?</strong>
-    This cannot be undone.
+    It will be moved to Delete History, where it can be restored later.
 </div>
 
 <section class="card card--narrow card--danger">

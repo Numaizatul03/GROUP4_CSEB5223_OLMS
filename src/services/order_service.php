@@ -327,7 +327,7 @@ class OrderService
     {
         $statement = $this->connection->prepare(
             'UPDATE products SET stock_quantity = stock_quantity - :quantity, updated_at = :updatedAt
-             WHERE product_id = :productId AND stock_quantity >= :requiredQuantity'
+             WHERE product_id = :productId AND stock_quantity >= :requiredQuantity AND deleted_at IS NULL'
         );
         $statement->execute([
             'quantity' => $cartItem->getQuantity(),

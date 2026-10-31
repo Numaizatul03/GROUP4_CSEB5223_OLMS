@@ -89,6 +89,38 @@ function testDeleteProductRemovesOnlyThatProduct(): void
     assertTrue(!$productService->deleteProduct(3), 'Deleting the same product again should report false');
 }
 
+function testDeletedProductCanBeRestoredWithSameId(): void
+{
+    $connection = createTestConnection();
+    $productService = new ProductService($connection);
+    $cartService = new CartService($connection);
+    $cartService->addItem(4, 3, 1);
+
+    $productService->deleteProduct(3);
+    assertSame([], $productService->searchProduct(['keyword' => 'tomatoes']), 'Deleted product is hidden from search and the shop');
+    assertTrue($cartService->getCartForUser(4)->isEmpty(), 'Deleted product is taken out of shopping carts');
+    assertSame(3, $productService->getDeletedProducts()[0]->getProductId(), 'Deleted product appears in Delete History');
+    assertThrows(fn () => $cartService->addItem(4, 3, 1), 'no longer available', 'A deleted product cannot be added to a cart');
+
+    assertTrue($productService->restoreProduct(3), 'Restore should succeed');
+    $restoredProduct = $productService->findProductById(3);
+    assertTrue($restoredProduct !== null && !$restoredProduct->isDeleted(), 'Restored product is back in the list');
+    assertSame('Cameron Highlands Tomatoes 500g', $restoredProduct->getProductName(), 'Restored product keeps its ID and details');
+    assertSame(3, $restoredProduct->getStockQuantity(), 'Restored product keeps its stock');
+    assertSame([], $productService->getDeletedProducts(), 'Delete History is empty again');
+}
+
+function testPermanentDeleteOnlyFromDeleteHistory(): void
+{
+    $productService = new ProductService(createTestConnection());
+
+    assertTrue(!$productService->permanentlyDeleteProduct(5), 'An active product cannot skip Delete History');
+    $productService->deleteProduct(5);
+    assertTrue($productService->permanentlyDeleteProduct(5), 'A product in Delete History can be removed for good');
+    assertSame(null, $productService->findDeletedProductById(5), 'Permanently deleted product is gone from history');
+    assertTrue(!$productService->restoreProduct(5), 'A permanently deleted product cannot be restored');
+}
+
 function testCheckStockAndStockStatus(): void
 {
     $productService = new ProductService(createTestConnection());
@@ -136,6 +168,8 @@ return [
     'testSearchProductReturnsEmptyArrayWhenNotFound',
     'testUpdateProductSavesNewValues',
     'testDeleteProductRemovesOnlyThatProduct',
+    'testDeletedProductCanBeRestoredWithSameId',
+    'testPermanentDeleteOnlyFromDeleteHistory',
     'testCheckStockAndStockStatus',
     'testProductCrudWorksTogether',
 ];

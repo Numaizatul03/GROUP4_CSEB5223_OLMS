@@ -24,7 +24,7 @@ $navigationLinks = match (true) {
 };
 
 // Lab 3 & 4 product pages keep their own tabs inside the Products section
-$productTabs = ['list' => 'All Products', 'create' => 'Add Product', 'search' => 'Search', 'edit_search' => 'Edit', 'delete_search' => 'Delete'];
+$productTabs = ['list' => 'All Products', 'create' => 'Add Product', 'search' => 'Search', 'edit_search' => 'Edit', 'delete_search' => 'Delete', 'product_history' => 'Delete History'];
 
 $sectionLabels = [
     'shop' => 'Shop', 'cart' => 'Shopping Cart', 'orders' => 'My Orders', 'account' => 'My Account',

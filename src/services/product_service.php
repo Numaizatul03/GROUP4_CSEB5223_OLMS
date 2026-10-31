@@ -12,13 +12,17 @@ require_once __DIR__ . '/business_rule_exception.php';
  * Description: All SQL for the products table is kept in this class. Every
  *              query uses prepared statements with bound parameters so user
  *              input can never change the SQL (prevents SQL injection).
+ *              Deleting is a "soft delete": the row stays with deleted_at set,
+ *              so the product keeps its ID and can be restored from Delete History.
+ *              Every normal read only sees products that are not deleted.
  */
 class ProductService
 {
     private const SELECT_PRODUCTS_SQL = 'SELECT p.product_id, p.category_id, c.category_name, p.product_name,
-                p.description, p.price, p.stock_quantity, p.created_at, p.updated_at
+                p.description, p.price, p.stock_quantity, p.created_at, p.updated_at, p.deleted_at
             FROM products p
             INNER JOIN categories c ON c.category_id = p.category_id';
+    private const NOT_DELETED_SQL = 'p.deleted_at IS NULL';
 
     private PDO $connection;
 
@@ -36,7 +40,7 @@ class ProductService
      */
     public function getAllProducts(): array
     {
-        $statement = $this->connection->query(self::SELECT_PRODUCTS_SQL . ' ORDER BY p.product_id');
+        $statement = $this->connection->query(self::SELECT_PRODUCTS_SQL . ' WHERE ' . self::NOT_DELETED_SQL . ' ORDER BY p.product_id');
 
         return $this->mapRowsToProducts($statement->fetchAll());
     }
@@ -45,12 +49,14 @@ class ProductService
      * Function/Method Name: findProductById
      * Purpose:      Fetch one product by its ID.
      * Parameters:   int $productId - the product to look for
-     * Return Value: ?Product - the product, or null when it does not exist
+     * Return Value: ?Product - the product, or null when it does not exist or is deleted
      * Description:  Used by view, edit and delete to load the target product.
      */
     public function findProductById(int $productId): ?Product
     {
-        $statement = $this->connection->prepare(self::SELECT_PRODUCTS_SQL . ' WHERE p.product_id = :productId');
+        $statement = $this->connection->prepare(
+            self::SELECT_PRODUCTS_SQL . ' WHERE p.product_id = :productId AND ' . self::NOT_DELETED_SQL
+        );
         $statement->execute(['productId' => $productId]);
         $productRow = $statement->fetch();
 
@@ -69,7 +75,7 @@ class ProductService
      */
     public function searchProduct(array $searchCriteria): array
     {
-        $conditions = [];
+        $conditions = [self::NOT_DELETED_SQL];
         $parameters = [];
 
         if (($searchCriteria['productId'] ?? null) !== null) {
@@ -98,10 +104,7 @@ class ProductService
             $parameters['maxPrice'] = $searchCriteria['maxPrice'];
         }
 
-        $searchSql = self::SELECT_PRODUCTS_SQL;
-        if ($conditions !== []) {
-            $searchSql .= ' WHERE ' . implode(' AND ', $conditions);
-        }
+        $searchSql = self::SELECT_PRODUCTS_SQL . ' WHERE ' . implode(' AND ', $conditions);
 
         $statement = $this->connection->prepare($searchSql . ' ORDER BY p.product_name');
         $statement->execute($parameters);
@@ -151,7 +154,7 @@ class ProductService
             'UPDATE products
              SET category_id = :categoryId, product_name = :productName, description = :description,
                  price = :price, stock_quantity = :stockQuantity, updated_at = :updatedAt
-             WHERE product_id = :productId'
+             WHERE product_id = :productId AND deleted_at IS NULL'
         );
         $statement->execute([
             'categoryId' => $product->getCategoryId(),
@@ -168,14 +171,101 @@ class ProductService
 
     /**
      * Function/Method Name: deleteProduct
-     * Purpose:      Permanently remove a product.
+     * Purpose:      Delete a product by moving it to Delete History (soft delete).
      * Parameters:   int $productId - the product to delete
-     * Return Value: bool - true when a row was deleted, false when the ID did not exist
-     * Description:  Called only after the user has confirmed the deletion.
+     * Return Value: bool - true when the product was deleted, false when it did not
+     *               exist or was already deleted
+     * Description:  Called only after the user has confirmed the deletion. The product
+     *               disappears from the shop, lists and searches, and is taken out of
+     *               every shopping cart, but it keeps its ID so it can be restored.
      */
     public function deleteProduct(int $productId): bool
     {
-        $statement = $this->connection->prepare('DELETE FROM products WHERE product_id = :productId');
+        $this->connection->beginTransaction();
+        try {
+            $statement = $this->connection->prepare(
+                'UPDATE products SET deleted_at = :deletedAt WHERE product_id = :productId AND deleted_at IS NULL'
+            );
+            $statement->execute(['deletedAt' => date('Y-m-d H:i:s'), 'productId' => $productId]);
+            $isDeleted = $statement->rowCount() > 0;
+
+            if ($isDeleted) {
+                $cartStatement = $this->connection->prepare('DELETE FROM cart_items WHERE product_id = :productId');
+                $cartStatement->execute(['productId' => $productId]);
+            }
+            $this->connection->commit();
+        } catch (Throwable $exception) {
+            $this->connection->rollBack();
+            throw $exception;
+        }
+
+        return $isDeleted;
+    }
+
+    /**
+     * Function/Method Name: getDeletedProducts
+     * Purpose:      List the products in Delete History.
+     * Parameters:   none
+     * Return Value: Product[] - deleted products, most recently deleted first
+     * Description:  Shown on the Delete History page with Restore buttons.
+     */
+    public function getDeletedProducts(): array
+    {
+        $statement = $this->connection->query(
+            self::SELECT_PRODUCTS_SQL . ' WHERE p.deleted_at IS NOT NULL ORDER BY p.deleted_at DESC, p.product_id DESC'
+        );
+
+        return $this->mapRowsToProducts($statement->fetchAll());
+    }
+
+    /**
+     * Function/Method Name: findDeletedProductById
+     * Purpose:      Fetch one product from Delete History.
+     * Parameters:   int $productId
+     * Return Value: ?Product - the deleted product, or null when it is not in Delete History
+     * Description:  Used by restore and permanent delete.
+     */
+    public function findDeletedProductById(int $productId): ?Product
+    {
+        $statement = $this->connection->prepare(
+            self::SELECT_PRODUCTS_SQL . ' WHERE p.product_id = :productId AND p.deleted_at IS NOT NULL'
+        );
+        $statement->execute(['productId' => $productId]);
+        $productRow = $statement->fetch();
+
+        return $productRow === false ? null : Product::fromDatabaseRow($productRow);
+    }
+
+    /**
+     * Function/Method Name: restoreProduct
+     * Purpose:      Bring a product back from Delete History.
+     * Parameters:   int $productId
+     * Return Value: bool - true when the product was restored
+     * Description:  The product returns with the same ID, stock and details it had
+     *               before it was deleted.
+     */
+    public function restoreProduct(int $productId): bool
+    {
+        $statement = $this->connection->prepare(
+            'UPDATE products SET deleted_at = NULL, updated_at = :updatedAt WHERE product_id = :productId AND deleted_at IS NOT NULL'
+        );
+        $statement->execute(['updatedAt' => date('Y-m-d H:i:s'), 'productId' => $productId]);
+
+        return $statement->rowCount() > 0;
+    }
+
+    /**
+     * Function/Method Name: permanentlyDeleteProduct
+     * Purpose:      Remove a product from Delete History for good.
+     * Parameters:   int $productId
+     * Return Value: bool - true when the row was removed
+     * Description:  Only products already in Delete History can be removed, so an
+     *               active product can never skip the history. Past orders keep their
+     *               copied product name and price.
+     */
+    public function permanentlyDeleteProduct(int $productId): bool
+    {
+        $statement = $this->connection->prepare('DELETE FROM products WHERE product_id = :productId AND deleted_at IS NOT NULL');
         $statement->execute(['productId' => $productId]);
 
         return $statement->rowCount() > 0;
@@ -224,14 +314,18 @@ class ProductService
      */
     public function getProductsByStockLevel(): array
     {
-        $statement = $this->connection->query(self::SELECT_PRODUCTS_SQL . ' ORDER BY p.stock_quantity, p.product_name');
+        $statement = $this->connection->query(
+            self::SELECT_PRODUCTS_SQL . ' WHERE ' . self::NOT_DELETED_SQL . ' ORDER BY p.stock_quantity, p.product_name'
+        );
 
         return $this->mapRowsToProducts($statement->fetchAll());
     }
 
     public function countLowStockProducts(): int
     {
-        $statement = $this->connection->prepare('SELECT COUNT(*) FROM products WHERE stock_quantity <= :threshold');
+        $statement = $this->connection->prepare(
+            'SELECT COUNT(*) FROM products WHERE stock_quantity <= :threshold AND deleted_at IS NULL'
+        );
         $statement->execute(['threshold' => Product::LOW_STOCK_THRESHOLD]);
 
         return (int) $statement->fetchColumn();
@@ -241,12 +335,12 @@ class ProductService
      * Function/Method Name: countProducts
      * Purpose:      Count all products.
      * Parameters:   none
-     * Return Value: int - number of rows in the products table
+     * Return Value: int - number of products that are not deleted
      * Description:  Shown on the delete result so the user can see the total drop by one.
      */
     public function countProducts(): int
     {
-        return (int) $this->connection->query('SELECT COUNT(*) FROM products')->fetchColumn();
+        return (int) $this->connection->query('SELECT COUNT(*) FROM products WHERE deleted_at IS NULL')->fetchColumn();
     }
 
     /**

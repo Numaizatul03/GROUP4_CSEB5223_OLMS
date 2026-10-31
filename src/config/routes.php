@@ -64,6 +64,11 @@ return [
     'destroy' => ['POST', 'ProductController', 'deleteProduct', 'administrator', 'products'],
     'delete_result' => ['GET', 'ProductController', 'showDeleteResult', 'administrator', 'products'],
 
+    // Product Delete History (soft delete: restore or delete permanently)
+    'product_history' => ['GET', 'ProductHistoryController', 'listDeletedProducts', 'administrator', 'products'],
+    'product_restore' => ['POST', 'ProductHistoryController', 'restoreProduct', 'administrator', 'products'],
+    'product_purge' => ['POST', 'ProductHistoryController', 'permanentlyDeleteProduct', 'administrator', 'products'],
+
     // Manage Inventory
     'inventory' => ['GET', 'InventoryController', 'showInventory', 'administrator', 'inventory'],
     'inventory_adjust' => ['POST', 'InventoryController', 'adjustStock', 'administrator', 'inventory'],

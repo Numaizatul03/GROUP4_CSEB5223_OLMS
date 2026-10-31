@@ -23,6 +23,7 @@ class Product
     private int $stockQuantity = 0;
     private ?string $createdAt = null;
     private ?string $updatedAt = null;
+    private ?string $deletedAt = null;
 
     /**
      * Function/Method Name: fromDatabaseRow
@@ -44,6 +45,7 @@ class Product
         $product->setStockQuantity((int) $productRow['stock_quantity']);
         $product->createdAt = $productRow['created_at'] ?? null;
         $product->updatedAt = $productRow['updated_at'] ?? null;
+        $product->deletedAt = $productRow['deleted_at'] ?? null;
 
         return $product;
     }
@@ -196,5 +198,22 @@ class Product
     public function getUpdatedAt(): ?string
     {
         return $this->updatedAt;
+    }
+
+    public function getDeletedAt(): ?string
+    {
+        return $this->deletedAt;
+    }
+
+    /**
+     * Function/Method Name: isDeleted
+     * Purpose:      Tell whether the product is in Delete History.
+     * Parameters:   none
+     * Return Value: bool - true when the product was deleted and can still be restored
+     * Description:  Deleted products are hidden from the shop, the product list and checkout.
+     */
+    public function isDeleted(): bool
+    {
+        return $this->deletedAt !== null;
     }
 }

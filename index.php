@@ -54,6 +54,7 @@ function createController(string $controllerClass, PDO $connection, AuthService 
         'DashboardController' => new DashboardController($productService, $orderService, $paymentService, $userService, $categoryService),
         'ProductController' => new ProductController($productService, $categoryService, new ProductValidator()),
         'InventoryController' => new InventoryController($productService),
+        'ProductHistoryController' => new ProductHistoryController($productService),
         'CategoryController' => new CategoryController($categoryService, new CategoryValidator()),
         'CustomerController' => new CustomerController($userService, new UserValidator(), $orderService),
         'AdminOrderController' => new AdminOrderController($orderService, new OrderValidator()),

@@ -41,7 +41,8 @@ CREATE TABLE products (
     price          DECIMAL(10, 2) NOT NULL,
     stock_quantity INTEGER        NOT NULL DEFAULT 0,
     created_at     DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at     DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP
+    updated_at     DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted_at     DATETIME       NULL DEFAULT NULL
 );
 CREATE INDEX idx_products_product_name ON products (product_name);
 

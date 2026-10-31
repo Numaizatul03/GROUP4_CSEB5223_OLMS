@@ -16,7 +16,7 @@ class CategoryService
     private const SELECT_CATEGORIES_SQL = 'SELECT c.category_id, c.category_name, c.description,
                 COUNT(p.product_id) AS product_count
             FROM categories c
-            LEFT JOIN products p ON p.category_id = c.category_id';
+            LEFT JOIN products p ON p.category_id = c.category_id AND p.deleted_at IS NULL';
     private const GROUP_CATEGORIES_SQL = ' GROUP BY c.category_id, c.category_name, c.description';
 
     private PDO $connection;
@@ -162,8 +162,8 @@ class CategoryService
      * Purpose:      Permanently remove an empty category.
      * Parameters:   int $categoryId
      * Return Value: bool - true when a row was deleted
-     * Description:  Refused while products still use the category; the user is told
-     *               to move or delete those products first.
+     * Description:  Refused while products still use the category - including deleted
+     *               products in Delete History, which could still be restored into it.
      */
     public function deleteCategory(int $categoryId): bool
     {
@@ -175,10 +175,35 @@ class CategoryService
             );
         }
 
+        $deletedProductCount = $this->countDeletedProductsInCategory($categoryId);
+        if ($category !== null && $deletedProductCount > 0) {
+            throw new BusinessRuleException(
+                'Category "' . $category->getCategoryName() . '" still has ' . $deletedProductCount
+                . ' product(s) in Delete History. Restore them into another category or delete them permanently first.'
+            );
+        }
+
         $statement = $this->connection->prepare('DELETE FROM categories WHERE category_id = :categoryId');
         $statement->execute(['categoryId' => $categoryId]);
 
         return $statement->rowCount() > 0;
+    }
+
+    /**
+     * Function/Method Name: countDeletedProductsInCategory
+     * Purpose:      Count products in Delete History that still belong to a category.
+     * Parameters:   int $categoryId
+     * Return Value: int - number of soft-deleted products in the category
+     * Description:  Used to explain why such a category cannot be deleted yet.
+     */
+    public function countDeletedProductsInCategory(int $categoryId): int
+    {
+        $statement = $this->connection->prepare(
+            'SELECT COUNT(*) FROM products WHERE category_id = :categoryId AND deleted_at IS NOT NULL'
+        );
+        $statement->execute(['categoryId' => $categoryId]);
+
+        return (int) $statement->fetchColumn();
     }
 
     public function countCategories(): int

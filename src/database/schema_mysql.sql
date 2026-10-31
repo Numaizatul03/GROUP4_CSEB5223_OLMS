@@ -55,6 +55,8 @@ CREATE TABLE products (
     stock_quantity INT UNSIGNED   NOT NULL DEFAULT 0,
     created_at     DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at     DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    -- Soft delete: a deleted product keeps its row (and ID) and can be restored from Delete History
+    deleted_at     DATETIME       NULL DEFAULT NULL,
     PRIMARY KEY (product_id),
     KEY idx_products_product_name (product_name),
     CONSTRAINT fk_products_category_id FOREIGN KEY (category_id)

@@ -188,7 +188,7 @@ class CartService
      */
     private function requireStockFor(int $productId, int $quantity): void
     {
-        $statement = $this->connection->prepare('SELECT product_name, stock_quantity FROM products WHERE product_id = :productId');
+        $statement = $this->connection->prepare('SELECT product_name, stock_quantity FROM products WHERE product_id = :productId AND deleted_at IS NULL');
         $statement->execute(['productId' => $productId]);
         $productRow = $statement->fetch();
 

@@ -45,8 +45,23 @@ function testDeleteCategoryOnlyWhenEmpty(): void
     assertSame(null, $categoryService->findCategoryById($newCategoryId), 'Deleted category should be gone');
 }
 
+function testCategoryWithDeletedProductsExplainsDeleteHistory(): void
+{
+    $connection = createTestConnection();
+    $categoryService = new CategoryService($connection);
+    $productService = new ProductService($connection);
+    $productService->deleteProduct(10); // the only Household product
+
+    assertSame(0, $categoryService->findCategoryById(5)->getProductCount(), 'Deleted products are not counted in the category');
+    assertThrows(fn () => $categoryService->deleteCategory(5), 'in Delete History', 'Category must not be deleted while its products can still be restored');
+
+    $productService->permanentlyDeleteProduct(10);
+    assertTrue($categoryService->deleteCategory(5), 'Category can be deleted once Delete History no longer uses it');
+}
+
 return [
     'testCategoriesIncludeProductCounts',
     'testCreateAndUpdateCategoryWithUniqueName',
     'testDeleteCategoryOnlyWhenEmpty',
+    'testCategoryWithDeletedProductsExplainsDeleteHistory',
 ];
