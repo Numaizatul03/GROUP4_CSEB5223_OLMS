@@ -20,6 +20,7 @@ class ProductValidator
     public const MAX_STOCK_QUANTITY = 100000;
 
     private const PRICE_PATTERN = '/^\d+(\.\d{1,2})?$/';
+    private const TOO_MANY_DECIMALS_PATTERN = '/^\d*\.\d{3,}$/';
     private const WHOLE_NUMBER_PATTERN = '/^\d+$/';
 
     /**
@@ -172,11 +173,27 @@ class ProductValidator
         return null;
     }
 
+    /**
+     * Function/Method Name: validatePrice
+     * Purpose:      Check the price field and explain exactly what is wrong.
+     * Parameters:   string $priceText - raw form value
+     * Return Value: ?string - error message, or null when the price is valid
+     * Description:  Separate messages for an empty price, a value that is not a
+     *               number, too many decimal places (e.g. 0.001) and an out-of-range price.
+     */
     private function validatePrice(string $priceText): ?string
     {
         $priceText = trim($priceText);
+        if ($priceText === '') {
+            return 'Price is required.';
+        }
+
+        if (preg_match(self::TOO_MANY_DECIMALS_PATTERN, $priceText)) {
+            return 'Price must have a maximum of two decimal places, for example 4.90.';
+        }
+
         if (!preg_match(self::PRICE_PATTERN, $priceText)) {
-            return 'Price must be a number with up to 2 decimal places, for example 4.90.';
+            return 'Price must be a positive number, for example 4.90.';
         }
 
         $price = (float) $priceText;

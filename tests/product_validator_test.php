@@ -76,7 +76,23 @@ function testEmptySearchMeansNoCriteria(): void
     );
 }
 
+function testPriceWithMoreThanTwoDecimalsHasClearMessage(): void
+{
+    $productValidator = new ProductValidator();
+    $formInput = ['productName' => 'Test', 'categoryId' => '1', 'description' => 'x', 'stockQuantity' => '1'];
+    $priceError = static fn (string $price): string =>
+        $productValidator->validateProductInput(['price' => $price] + $formInput, VALID_CATEGORY_IDS)['price'] ?? '';
+
+    assertTrue(str_contains($priceError('0.001'), 'maximum of two decimal places'), '0.001 must explain the two-decimal rule');
+    assertTrue(str_contains($priceError('4.999'), 'maximum of two decimal places'), '4.999 must explain the two-decimal rule');
+    assertTrue(str_contains($priceError('abc'), 'positive number'), 'Text must be explained as not a number');
+    assertTrue(str_contains($priceError(''), 'required'), 'Empty price must say it is required');
+    assertTrue(str_contains($priceError('0.00'), 'more than 0'), 'Zero price must be refused');
+    assertSame('', $priceError('4.90'), 'A valid price has no error');
+}
+
 return [
+    'testPriceWithMoreThanTwoDecimalsHasClearMessage',
     'testValidProductInputHasNoErrors',
     'testEmptyProductInputReportsEveryRequiredField',
     'testInvalidNumbersAndUnknownCategoryAreRejected',

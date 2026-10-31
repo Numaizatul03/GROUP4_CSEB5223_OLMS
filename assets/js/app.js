@@ -28,22 +28,92 @@ function addCharacterCounters() {
     });
 }
 
+const TOO_MANY_DECIMALS_PATTERN = /^\d*\.\d{3,}$/;
+
+/**
+ * Function/Method Name: getFieldErrorMessage
+ * Purpose:      Explain why a form field is invalid, in plain words.
+ * Parameters:   formField (HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement)
+ * Return Value: string - the message, or '' when the field is valid
+ * Description:  Uses the same wording as ProductValidator on the server, so the
+ *               user sees the same message with or without JavaScript.
+ */
+function getFieldErrorMessage(formField) {
+    const fieldValue = formField.value.trim();
+    const validity = formField.validity;
+
+    if (formField.required && fieldValue === '' && !validity.badInput) {
+        return 'This field is required.';
+    }
+
+    if (formField.name === 'price' && TOO_MANY_DECIMALS_PATTERN.test(fieldValue)) {
+        return 'Price must have a maximum of two decimal places, for example 4.90.';
+    }
+
+    if (validity.badInput) {
+        return 'Please enter a number.';
+    }
+
+    if (validity.rangeUnderflow) {
+        return `Must be at least ${formField.min}.`;
+    }
+
+    if (validity.rangeOverflow) {
+        return `Must be at most ${formField.max}.`;
+    }
+
+    if (validity.stepMismatch) {
+        return formField.step === '1' ? 'Please enter a whole number.' : 'Please enter a valid value.';
+    }
+
+    return validity.valid ? '' : 'Please check this field.';
+}
+
+/**
+ * Function/Method Name: showFieldError
+ * Purpose:      Show or clear the message under one form field.
+ * Parameters:   formField - the field; message (string) - '' clears the message
+ * Return Value: none
+ * Description:  Messages added here are marked data-client-error, so server
+ *               messages printed by PHP are left untouched.
+ */
+function showFieldError(formField, message) {
+    const formRow = formField.closest('.form__row') ?? formField.parentElement;
+    let errorElement = formRow.querySelector('[data-client-error]');
+
+    // An older server message no longer applies once the user edits the field
+    formRow.querySelectorAll('.field-error:not([data-client-error])').forEach((serverError) => serverError.remove());
+    formField.classList.toggle('is-invalid', message !== '');
+    if (message === '') {
+        errorElement?.remove();
+        return;
+    }
+
+    if (errorElement === null) {
+        errorElement = document.createElement('p');
+        errorElement.className = 'field-error';
+        errorElement.setAttribute('data-client-error', '');
+        errorElement.setAttribute('role', 'alert');
+        formRow.appendChild(errorElement);
+    }
+    errorElement.textContent = message;
+}
+
 /**
  * Function/Method Name: validateProductForm
- * Purpose:      Check required fields before the product form is sent.
+ * Purpose:      Check every field before the product form is sent.
  * Parameters:   form (HTMLFormElement) - the product form
- * Return Value: boolean - true when every field passes the browser checks
- * Description:  Marks invalid fields in red and moves focus to the first one.
+ * Return Value: boolean - true when every field is valid
+ * Description:  Shows a message under each invalid field and moves focus to the first one.
  */
 function validateProductForm(form) {
-    const formFields = Array.from(form.querySelectorAll('input, select, textarea'));
+    const formFields = Array.from(form.querySelectorAll('input:not([type=hidden]), select, textarea'));
     let firstInvalidField = null;
 
     formFields.forEach((formField) => {
-        const isMissingRequiredValue = formField.required && formField.value.trim() === '';
-        const isFieldValid = formField.checkValidity() && !isMissingRequiredValue;
-        formField.classList.toggle('is-invalid', !isFieldValid);
-        if (!isFieldValid && firstInvalidField === null) {
+        const message = getFieldErrorMessage(formField);
+        showFieldError(formField, message);
+        if (message !== '' && firstInvalidField === null) {
             firstInvalidField = formField;
         }
     });
@@ -61,6 +131,11 @@ function setUpProductForms() {
             if (!validateProductForm(form)) {
                 submitEvent.preventDefault();
             }
+        });
+
+        // Price and stock are checked while typing, so 0.001 is explained straight away
+        form.querySelectorAll('input[type=number]').forEach((numberField) => {
+            numberField.addEventListener('input', () => showFieldError(numberField, getFieldErrorMessage(numberField)));
         });
     });
 }
