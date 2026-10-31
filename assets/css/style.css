@@ -13,6 +13,20 @@
     --color-vivid-violet: #ab2fed;
     --color-warm-gray-purple: #6a5b72;
     --color-lavender-mist: #ebe6ee;
+
+    /* Status colours (added after user testing - clearer than the purple-only palette) */
+    --color-green: #22a355;
+    --color-green-soft: #dcf5e4;
+    --color-green-hover: #c3ecd1;
+    --color-green-text: #146c38;
+    --color-amber: #e8a317;
+    --color-amber-soft: #fff1cc;
+    --color-amber-hover: #ffe5a3;
+    --color-amber-text: #8a5a00;
+    --color-red: #d33a32;
+    --color-red-soft: #fde4e2;
+    --color-red-border: #f2a7a2;
+    --color-red-text: #a52620;
     --color-soft-white: #f5f4f5;
     --color-plum-shadow: #cdc7d1;
     --color-lavender-wash: #decaff;
@@ -210,19 +224,25 @@ a { color: var(--color-vivid-violet); }
 }
 .button:hover { background: var(--color-soft-white); }
 .button--small { padding: 5px 12px; font-size: 13px; }
-.button--primary,
-.button--danger {
+.button--primary {
     background: var(--color-deep-plum);
     border-color: var(--color-deep-plum);
     color: var(--color-canvas);
     font-weight: 600;
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), var(--shadow-xl);
 }
-.button--primary:hover,
-.button--danger:hover { background: var(--color-dark-mauve); }
+.button--primary:hover { background: var(--color-dark-mauve); }
 .button--ghost { background: var(--color-canvas); }
-.button--danger-ghost { border-color: var(--color-blush-bloom); color: var(--color-dark-mauve); }
-.button--danger-ghost:hover { background: var(--color-blush-bloom); }
+
+/* Action colours from user testing: Edit = amber, Delete = red, Restore = green */
+.button--edit { background: var(--color-amber-soft); border-color: var(--color-amber); color: var(--color-amber-text); font-weight: 600; }
+.button--edit:hover { background: var(--color-amber-hover); }
+.button--danger-ghost { background: var(--color-canvas); border-color: var(--color-red-border); color: var(--color-red-text); font-weight: 600; }
+.button--danger-ghost:hover { background: var(--color-red-soft); }
+.button--danger { background: var(--color-red); border-color: var(--color-red); color: var(--color-canvas); font-weight: 600; }
+.button--danger:hover { background: var(--color-red-text); }
+.button--restore { background: var(--color-green-soft); border-color: var(--color-green); color: var(--color-green-text); font-weight: 600; }
+.button--restore:hover { background: var(--color-green-hover); }
 .top-nav__action.is-active { background: var(--color-dark-mauve); }
 
 /* ---------- Alerts ---------- */
@@ -265,9 +285,9 @@ input:focus, select:focus, textarea:focus {
 }
 textarea { resize: vertical; }
 .required { color: var(--color-vivid-violet); }
-.field-error { margin: 0; color: var(--color-vivid-violet); font-size: 13px; font-weight: 600; }
+.field-error { margin: 0; color: var(--color-red-text); font-size: 13px; font-weight: 600; }
 .char-counter { margin: 0; color: var(--color-warm-gray-purple); font-size: 12px; text-align: right; }
-.is-invalid { border-color: var(--color-vivid-violet); background: #fdf8ff; }
+.is-invalid { border-color: var(--color-red); background: #fffafa; }
 
 /* ---------- Tables ---------- */
 .table-wrap { overflow-x: auto; }
@@ -306,9 +326,10 @@ textarea { resize: vertical; }
     font-weight: 600;
     white-space: nowrap;
 }
-.badge--ok { background: var(--color-lavender-wash); }
-.badge--warn { background: var(--color-blush-bloom); }
-.badge--bad { background: var(--color-deep-plum); color: var(--color-canvas); }
+/* Stock and status colours from user testing: green = OK, amber = low / waiting, red = none / cancelled */
+.badge--ok { background: var(--color-green-soft); color: var(--color-green-text); }
+.badge--warn { background: var(--color-amber-soft); color: var(--color-amber-text); }
+.badge--bad { background: var(--color-red-soft); color: var(--color-red-text); }
 .badge--info { background: var(--color-vivid-violet); color: var(--color-canvas); margin-left: 6px; font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; }
 
 /* ---------- Detail list ---------- */

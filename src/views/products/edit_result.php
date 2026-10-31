@@ -50,7 +50,7 @@ $formatFieldValue = static fn (string $fieldName, mixed $fieldValue): string =>
         </div>
     <?php endif; ?>
     <div class="form__actions">
-        <a class="button button--ghost" href="<?= escapeHtml(buildUrl('edit', ['productId' => $currentProductDetails['productId']])) ?>">Edit again</a>
+        <a class="button button--edit" href="<?= escapeHtml(buildUrl('edit', ['productId' => $currentProductDetails['productId']])) ?>">Edit again</a>
         <a class="button button--ghost" href="<?= escapeHtml(buildUrl('edit_search')) ?>">Edit another product</a>
     </div>
 </section>

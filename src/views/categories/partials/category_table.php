@@ -20,7 +20,7 @@ $highlightCategoryId ??= null;
                 <td class="is-number"><?= $category->getProductCount() ?></td>
                 <td class="is-actions">
                     <a class="button button--small button--ghost" href="<?= escapeHtml(buildUrl('shop', ['categoryId' => $category->getCategoryId()])) ?>">View in shop</a>
-                    <a class="button button--small button--ghost" href="<?= escapeHtml(buildUrl('category_edit', ['categoryId' => $category->getCategoryId()])) ?>">Edit</a>
+                    <a class="button button--small button--edit" href="<?= escapeHtml(buildUrl('category_edit', ['categoryId' => $category->getCategoryId()])) ?>">Edit</a>
                     <a class="button button--small button--danger-ghost" href="<?= escapeHtml(buildUrl('category_delete_confirm', ['categoryId' => $category->getCategoryId()])) ?>">Delete</a>
                 </td>
             </tr>

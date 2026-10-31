@@ -21,7 +21,7 @@ $highlightCustomerId ??= null;
                 <td class="is-number"><?= $orderCounts[$customer->getUserId()] ?? 0 ?></td>
                 <td class="is-actions">
                     <a class="button button--small button--ghost" href="<?= escapeHtml(buildUrl('customer', ['customerId' => $customer->getUserId()])) ?>">View</a>
-                    <a class="button button--small button--ghost" href="<?= escapeHtml(buildUrl('customer_edit', ['customerId' => $customer->getUserId()])) ?>">Edit</a>
+                    <a class="button button--small button--edit" href="<?= escapeHtml(buildUrl('customer_edit', ['customerId' => $customer->getUserId()])) ?>">Edit</a>
                     <a class="button button--small button--danger-ghost" href="<?= escapeHtml(buildUrl('customer_delete_confirm', ['customerId' => $customer->getUserId()])) ?>">Delete</a>
                 </td>
             </tr>

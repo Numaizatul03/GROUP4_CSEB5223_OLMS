@@ -10,7 +10,7 @@
         <div class="card__header"><h2>Customer details</h2></div>
         <?php ViewService::renderPartial('shared/partials/detail_list', ['detailRows' => $detailRows]); ?>
         <div class="form__actions">
-            <a class="button button--primary" href="<?= escapeHtml(buildUrl('customer_edit', ['customerId' => $customer->getUserId()])) ?>">Edit</a>
+            <a class="button button--edit" href="<?= escapeHtml(buildUrl('customer_edit', ['customerId' => $customer->getUserId()])) ?>">Edit</a>
             <a class="button button--danger-ghost" href="<?= escapeHtml(buildUrl('customer_delete_confirm', ['customerId' => $customer->getUserId()])) ?>">Delete</a>
             <a class="button button--ghost" href="<?= escapeHtml(buildUrl('customers')) ?>">All customers</a>
         </div>

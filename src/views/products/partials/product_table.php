@@ -12,7 +12,7 @@ $highlightProductId ??= null;
 $emptyMessage ??= 'There are no products yet.';
 $actionLabels = [
     'view' => ['label' => 'View', 'route' => 'view', 'style' => 'button--ghost'],
-    'edit' => ['label' => 'Edit', 'route' => 'edit', 'style' => 'button--ghost'],
+    'edit' => ['label' => 'Edit', 'route' => 'edit', 'style' => 'button--edit'],
     'delete' => ['label' => 'Delete', 'route' => 'delete_confirm', 'style' => 'button--danger-ghost'],
 ];
 ?>
