@@ -57,7 +57,7 @@ Table 1: Modules, classes and files
 |----------------|--------|---------------|--------|--------|
 | Customer (User) | Register; administrator "Add Customer" | Profile; Manage Customers search by ID / name / email / phone | Profile update (before/after); administrator edit (before/after); change password | Administrator delete (confirm; refused when the customer has orders) |
 | Administrator (User) | Sample data only (no self-registration) | Log in; profile | Profile update | — (protected) |
-| Product | Add Product (Lab 3 & 4) | Shop browse / search / category filter; admin search | Edit (before/after); inventory restock / write-off | Delete (confirm, result) |
+| Product | Add Product (Lab 3 & 4) | Shop browse / search / category filter; admin search | Edit (before/after); inventory restock / write-off | Delete (confirm, result) moves it to **Delete History**; restore (same ID) or delete permanently |
 | Category | Add Category | Manage Categories search by ID / keyword | Edit (before/after) | Delete (confirm; refused while products use it) |
 | ShoppingCart / CartItem | Add to cart | View cart | Change quantity | Remove item; clear cart |
 | Order / OrderItem | Checkout (one transaction) | My Orders; administrator search by ID / customer / status / date range | Status update (before/after); customer cancel | Administrator delete (Delivered / Cancelled only) |
@@ -77,6 +77,9 @@ Table 2: Create, read, update and delete for every class
   Cash on Delivery stays Pending until verified or delivered. No card or bank details are ever asked for.
   The amount always comes from the saved order, never from the form.
 - **Refunds:** cancelling a paid order refunds the payment; a payment cannot be refunded twice.
+- **Product Delete History:** deleting a product is a soft delete (`deleted_at` is set). It disappears from the shop, lists,
+  searches and carts, keeps its ID, and can be restored or deleted permanently from Products → Delete History.
+  A category cannot be deleted while Delete History still holds its products.
 - **Deletes are protected:** categories with products, customers with orders and active orders cannot be deleted.
 
 ## 5. Access control
@@ -108,7 +111,7 @@ a logged-in user opening the other role's page gets HTTP 403. Customers can only
 
 ## 7. Tests
 
-`php tests/run_tests.php` runs 31 tests in 5 suites: ProductService, ProductValidator,
+`php tests/run_tests.php` runs 35 tests in 5 suites: ProductService, ProductValidator,
 UserService (registration, login, profile, customer management), CategoryService, and
 Cart, Order and Payment (cart rules, checkout rollback, payment methods, status flow,
 cancellation restock, refunds, inventory).
