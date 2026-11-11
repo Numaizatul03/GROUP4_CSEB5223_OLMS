@@ -66,11 +66,14 @@ final class ApiResponse
      */
     public function send(): void
     {
-        http_response_code($this->statusCode);
-        header('Content-Type: application/json; charset=utf-8');
-        header('Cache-Control: no-store');
-        foreach ($this->headers as $headerName => $headerValue) {
-            header($headerName . ': ' . $headerValue);
+        // Headers can only be set before any output; this check stops a late answer adding PHP warnings to the JSON
+        if (!headers_sent()) {
+            http_response_code($this->statusCode);
+            header('Content-Type: application/json; charset=utf-8');
+            header('Cache-Control: no-store');
+            foreach ($this->headers as $headerName => $headerValue) {
+                header($headerName . ': ' . $headerValue);
+            }
         }
 
         echo json_encode($this->body, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);

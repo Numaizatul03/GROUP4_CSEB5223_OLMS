@@ -47,7 +47,8 @@ final class InputGuard
             return '';
         }
 
-        $cleanText = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/u', '', trim((string) $inputValue)) ?? '';
+        // Remove control characters first, then trim, so "eggs \x07" becomes "eggs" and not "eggs "
+        $cleanText = trim(preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/u', '', (string) $inputValue) ?? '');
 
         return mb_substr($cleanText, 0, $maxLength);
     }
@@ -67,6 +68,22 @@ final class InputGuard
         }
 
         return (int) $idText;
+    }
+
+    /**
+     * Function/Method Name: validateKeywordLength
+     * Purpose:      Refuse a search word that is too long to be a real search.
+     * Parameters:   array $queryInput - raw $_GET values
+     * Return Value: array - ['keyword' => message] when too long, otherwise []
+     * Description:  Shared by every search form so they all use the same limit (100 characters).
+     */
+    public static function validateKeywordLength(array $queryInput): array
+    {
+        $keyword = self::readText($queryInput, 'keyword', self::MAX_TEXT_LENGTH);
+
+        return mb_strlen($keyword) > self::MAX_SEARCH_LENGTH
+            ? ['keyword' => 'Search words must be ' . self::MAX_SEARCH_LENGTH . ' characters or fewer.']
+            : [];
     }
 
     /**

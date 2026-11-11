@@ -16,6 +16,7 @@
         <div class="form__row">
             <label for="keyword">Customer name or email</label>
             <input type="search" id="keyword" name="keyword" value="<?= escapeHtml($searchInput['keyword'] ?? '') ?>" placeholder="e.g. daniel">
+            <?= fieldErrorHtml($searchErrors, 'keyword') ?>
         </div>
         <div class="form__row">
             <label for="orderStatus">Status</label>

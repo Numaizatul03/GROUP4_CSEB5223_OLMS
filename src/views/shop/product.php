@@ -22,12 +22,13 @@ $isInStock = $product->checkStock();
         <?php if (!$isInStock): ?>
             <div class="alert alert--warning">This product is out of stock. Please check again later.</div>
         <?php elseif ($currentUser instanceof Customer): ?>
-            <form method="post" action="<?= escapeHtml(buildUrl('cart_add')) ?>" class="add-to-cart" novalidate>
+            <form method="post" action="<?= escapeHtml(buildUrl('cart_add')) ?>" class="add-to-cart" novalidate data-api-add-to-cart>
                 <input type="hidden" name="csrfToken" value="<?= escapeHtml($csrfToken) ?>">
                 <input type="hidden" name="productId" value="<?= escapeHtml($product->getProductId()) ?>">
                 <label for="quantity">Quantity</label>
                 <input type="number" id="quantity" name="quantity" value="1" min="1" max="<?= $maxQuantity ?>" step="1" required>
                 <button type="submit" class="button button--primary">Add to cart</button>
+                <p class="api-status" aria-live="polite" data-api-status></p>
             </form>
         <?php elseif ($currentUser === null): ?>
             <a class="button button--primary" href="<?= escapeHtml(buildUrl('login')) ?>">Log in to buy</a>

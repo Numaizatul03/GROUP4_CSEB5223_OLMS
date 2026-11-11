@@ -5,6 +5,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../models/product.php';
 require_once __DIR__ . '/product_validator.php';
 require_once __DIR__ . '/business_rule_exception.php';
+require_once __DIR__ . '/input_guard.php';
 require_once __DIR__ . '/code_generator.php';
 
 /**
@@ -105,10 +106,10 @@ class ProductService
         }
 
         if (($searchCriteria['keyword'] ?? '') !== '') {
-            $conditions[] = '(p.product_code LIKE :keywordCode OR p.product_name LIKE :keywordName OR p.description LIKE :keywordDescription)';
-            $parameters['keywordCode'] = '%' . $searchCriteria['keyword'] . '%';
-            $parameters['keywordName'] = '%' . $searchCriteria['keyword'] . '%';
-            $parameters['keywordDescription'] = '%' . $searchCriteria['keyword'] . '%';
+            $conditions[] = '(p.product_code LIKE :keywordCode ESCAPE \'!\' OR p.product_name LIKE :keywordName ESCAPE \'!\' OR p.description LIKE :keywordDescription ESCAPE \'!\')';
+            $parameters['keywordCode'] = InputGuard::makeContainsPattern($searchCriteria['keyword']);
+            $parameters['keywordName'] = InputGuard::makeContainsPattern($searchCriteria['keyword']);
+            $parameters['keywordDescription'] = InputGuard::makeContainsPattern($searchCriteria['keyword']);
         }
 
         if (($searchCriteria['categoryId'] ?? null) !== null) {

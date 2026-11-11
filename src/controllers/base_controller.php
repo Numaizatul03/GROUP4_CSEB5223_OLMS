@@ -5,6 +5,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../services/session_service.php';
 require_once __DIR__ . '/../services/view_service.php';
 require_once __DIR__ . '/../services/business_rule_exception.php';
+require_once __DIR__ . '/../services/input_guard.php';
 
 /**
  * Class Name:  BaseController
@@ -19,14 +20,12 @@ abstract class BaseController
      * Function/Method Name: readIdFromRequest
      * Purpose:      Read a record ID (e.g. "categoryId") from $_GET or $_POST.
      * Parameters:   array $requestInput - $_GET or $_POST; string $idName - field name
-     * Return Value: ?int - the ID, or null when it is missing or not a whole number
-     * Description:  Stops values such as "3abc" or "-1" reaching the database.
+     * Return Value: ?int - the ID, or null when it is missing, not a whole number, 0 or too long
+     * Description:  Stops values such as "3abc", "-1", a list, or a 30-digit number reaching the database.
      */
     protected function readIdFromRequest(array $requestInput, string $idName): ?int
     {
-        $idText = (string) ($requestInput[$idName] ?? '');
-
-        return ctype_digit($idText) ? (int) $idText : null;
+        return InputGuard::readId($requestInput, $idName);
     }
 
     /**

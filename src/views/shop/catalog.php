@@ -19,7 +19,7 @@ $categoryFilterUrl = static fn (string $categoryId): string =>
         <button type="submit" class="button button--primary">Search</button>
         <?php if ($hasSearched): ?><a class="button button--ghost" href="<?= escapeHtml(buildUrl('shop')) ?>">Clear</a><?php endif; ?>
     </div>
-    <?= fieldErrorHtml($searchErrors, 'minPrice') . fieldErrorHtml($searchErrors, 'maxPrice') ?>
+    <?= fieldErrorHtml($searchErrors, 'keyword') . fieldErrorHtml($searchErrors, 'minPrice') . fieldErrorHtml($searchErrors, 'maxPrice') ?>
     <div class="pill-row" aria-label="Categories">
         <a class="pill <?= $selectedCategoryId === '' ? 'is-active' : '' ?>" href="<?= escapeHtml($categoryFilterUrl('')) ?>">All</a>
         <?php foreach ($categories as $category): ?>

@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../models/order.php';
+require_once __DIR__ . '/input_guard.php';
 
 /**
  * Class Name:  OrderValidator
@@ -58,7 +59,7 @@ class OrderValidator
      */
     public function validateOrderSearchInput(array $queryInput): array
     {
-        $errors = [];
+        $errors = InputGuard::validateKeywordLength($queryInput);
         $orderIdText = trim((string) ($queryInput['orderId'] ?? ''));
         $orderStatus = trim((string) ($queryInput['orderStatus'] ?? ''));
         $dateFrom = trim((string) ($queryInput['dateFrom'] ?? ''));

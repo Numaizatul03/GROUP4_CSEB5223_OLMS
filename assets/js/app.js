@@ -164,7 +164,100 @@ function setUpConfirmForms() {
     });
 }
 
+/* ==========================================================================
+   OLMS API integration (Lab 7 & 8) - the shop page talks to api.php
+   ========================================================================== */
+
+const API_BASE_URL = 'api.php';
+const STOCK_CHECK_DELAY_MS = 300;
+
+/**
+ * Function/Method Name: callApi
+ * Purpose:      Call one OLMS API endpoint and return its JSON answer.
+ * Parameters:   path (string) - e.g. '/cart/items'; options (object) - method and body
+ * Return Value: Promise<{ok: boolean, status: number, body: object}>
+ * Description:  Sends the CSRF token from the page's <meta> tag on every change, as
+ *               CsrfMiddleware requires. A network failure throws, so the caller can
+ *               fall back to the normal form.
+ */
+async function callApi(path, options = {}) {
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+    const response = await fetch(API_BASE_URL + path, {
+        method: options.method ?? 'GET',
+        credentials: 'same-origin',
+        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
+        body: options.body === undefined ? undefined : JSON.stringify(options.body),
+    });
+    const body = await response.json().catch(() => ({}));
+
+    return { ok: response.ok, status: response.status, body };
+}
+
+function showApiStatus(statusElement, message, isError) {
+    statusElement.textContent = message;
+    statusElement.classList.toggle('api-status--error', isError);
+    statusElement.classList.toggle('api-status--ok', !isError);
+}
+
+/**
+ * Function/Method Name: setUpLiveAddToCart
+ * Purpose:      Add to cart through the API without reloading the page, with a live stock check.
+ * Parameters:   none
+ * Return Value: none
+ * Description:  While the quantity changes, GET /products/{id}/stock says whether that
+ *               many are available. Submitting calls POST /cart/items and updates the
+ *               cart counter. If the API cannot be reached, the normal form is sent instead.
+ */
+function setUpLiveAddToCart() {
+    const form = document.querySelector('form[data-api-add-to-cart]');
+    if (form === null) {
+        return;
+    }
+
+    const productId = form.querySelector('input[name="productId"]').value;
+    const quantityField = form.querySelector('input[name="quantity"]');
+    const statusElement = form.querySelector('[data-api-status]');
+    let stockCheckTimer = null;
+
+    quantityField.addEventListener('input', () => {
+        clearTimeout(stockCheckTimer);
+        stockCheckTimer = setTimeout(async () => {
+            if (!/^\d+$/.test(quantityField.value)) {
+                showApiStatus(statusElement, 'Please enter a whole number.', true);
+                return;
+            }
+            try {
+                const result = await callApi(`/products/${productId}/stock?quantity=${quantityField.value}`);
+                const stock = result.body.data;
+                showApiStatus(
+                    statusElement,
+                    result.ok ? (stock.isAvailable ? `In stock - ${stock.requestedQuantity} available.` : `Only ${stock.stockQuantity} left.`) : result.body.error.message,
+                    !result.ok || !stock.isAvailable
+                );
+            } catch (networkError) {
+                statusElement.textContent = '';
+            }
+        }, STOCK_CHECK_DELAY_MS);
+    });
+
+    form.addEventListener('submit', async (submitEvent) => {
+        submitEvent.preventDefault();
+        try {
+            const result = await callApi('/cart/items', { method: 'POST', body: { productId: Number(productId), quantity: quantityField.value } });
+            if (!result.ok) {
+                showApiStatus(statusElement, result.body.error?.message ?? 'Could not add to cart.', true);
+                return;
+            }
+            showApiStatus(statusElement, result.body.meta.message + ' Cart total: ' + result.body.data.totalText + '.', false);
+            document.querySelectorAll('.cart-count').forEach((cartCount) => { cartCount.textContent = result.body.data.itemCount; });
+        } catch (networkError) {
+            form.submit(); // the API could not be reached - use the normal form instead
+        }
+    });
+}
+
 addCharacterCounters();
 setUpProductForms();
 setUpAutoDismissAlerts();
 setUpConfirmForms();
+setUpLiveAddToCart();

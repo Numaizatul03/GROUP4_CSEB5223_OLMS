@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+require_once __DIR__ . '/input_guard.php';
+
 /**
  * Class Name:  ProductValidator
  * Purpose:     Check and convert user input for the Product module.
@@ -57,8 +59,8 @@ class ProductValidator
     {
         return [
             'categoryId' => (int) $formInput['categoryId'],
-            'productName' => trim((string) $formInput['productName']),
-            'description' => trim((string) $formInput['description']),
+            'productName' => InputGuard::readText($formInput, 'productName', self::MAX_PRODUCT_NAME_LENGTH),
+            'description' => InputGuard::readText($formInput, 'description', self::MAX_DESCRIPTION_LENGTH),
             'price' => round((float) $formInput['price'], 2),
             'stockQuantity' => (int) $formInput['stockQuantity'],
         ];
@@ -90,6 +92,8 @@ class ProductValidator
         if ($maxPriceText !== '' && !preg_match(self::PRICE_PATTERN, $maxPriceText)) {
             $errors['maxPrice'] = 'Maximum price must be a number such as 20.00.';
         }
+
+        $errors += InputGuard::validateKeywordLength($queryInput);
 
         $isPriceRangeGiven = $minPriceText !== '' && $maxPriceText !== '' && $errors === [];
         if ($isPriceRangeGiven && (float) $minPriceText > (float) $maxPriceText) {

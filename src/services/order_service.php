@@ -5,6 +5,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../models/order.php';
 require_once __DIR__ . '/cart_service.php';
 require_once __DIR__ . '/business_rule_exception.php';
+require_once __DIR__ . '/input_guard.php';
 
 /**
  * Class Name:  OrderService
@@ -120,9 +121,9 @@ class OrderService
         }
 
         if (($searchCriteria['keyword'] ?? '') !== '') {
-            $conditions[] = '(u.name LIKE :keywordName OR u.email LIKE :keywordEmail)';
-            $parameters['keywordName'] = '%' . $searchCriteria['keyword'] . '%';
-            $parameters['keywordEmail'] = '%' . $searchCriteria['keyword'] . '%';
+            $conditions[] = '(u.name LIKE :keywordName ESCAPE \'!\' OR u.email LIKE :keywordEmail ESCAPE \'!\')';
+            $parameters['keywordName'] = InputGuard::makeContainsPattern($searchCriteria['keyword']);
+            $parameters['keywordEmail'] = InputGuard::makeContainsPattern($searchCriteria['keyword']);
         }
 
         if (($searchCriteria['orderStatus'] ?? '') !== '') {

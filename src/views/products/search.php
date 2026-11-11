@@ -37,6 +37,7 @@ $searchError = static fn (string $fieldName): ?string => $searchErrors[$fieldNam
         <div class="form__row form__row--wide">
             <label for="keyword">Name, code or description contains</label>
             <input type="search" id="keyword" name="keyword" value="<?= $inputValue('keyword') ?>" placeholder="e.g. eggs">
+            <?php if ($searchError('keyword')): ?><p class="field-error"><?= escapeHtml($searchError('keyword')) ?></p><?php endif; ?>
         </div>
         <?php if ($searchMode === 'search'): ?>
             <div class="form__row">

@@ -55,9 +55,11 @@ final class MiddlewareResponder
             return;
         }
 
-        http_response_code($statusCode);
-        foreach ($headers as $headerName => $headerValue) {
-            header($headerName . ': ' . $headerValue);
+        if (!headers_sent()) {
+            http_response_code($statusCode);
+            foreach ($headers as $headerName => $headerValue) {
+                header($headerName . ': ' . $headerValue);
+            }
         }
         ViewService::renderView('shared/error_page', [
             'pageTitle' => $title,

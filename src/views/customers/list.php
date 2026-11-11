@@ -17,6 +17,7 @@
         <div class="form__row">
             <label for="keyword">Name, email or phone contains</label>
             <input type="search" id="keyword" name="keyword" value="<?= escapeHtml($searchInput['keyword'] ?? '') ?>" placeholder="e.g. siti or 012-">
+            <?= fieldErrorHtml($searchErrors, 'keyword') ?>
         </div>
     </div>
     <div class="form__actions">

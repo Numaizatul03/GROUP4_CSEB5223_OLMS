@@ -557,3 +557,8 @@ textarea { resize: vertical; }
     .product-detail__visual { height: 180px; font-size: 72px; }
     .progress-steps li { font-size: 10px; }
 }
+
+/* ---------- Live API messages on the shop page (Lab 7 & 8) ---------- */
+.api-status { flex-basis: 100%; margin: 0; font-size: 14px; font-weight: 600; min-height: 20px; }
+.api-status--ok { color: var(--color-green-text); }
+.api-status--error { color: var(--color-red-text); }

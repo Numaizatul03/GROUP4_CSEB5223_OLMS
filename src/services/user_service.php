@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../models/user.php';
 require_once __DIR__ . '/business_rule_exception.php';
+require_once __DIR__ . '/input_guard.php';
 
 /**
  * Class Name:  UserService
@@ -100,10 +101,10 @@ class UserService
         }
 
         if (($searchCriteria['keyword'] ?? '') !== '') {
-            $conditions[] = '(name LIKE :keywordName OR email LIKE :keywordEmail OR phone_number LIKE :keywordPhone)';
-            $parameters['keywordName'] = '%' . $searchCriteria['keyword'] . '%';
-            $parameters['keywordEmail'] = '%' . $searchCriteria['keyword'] . '%';
-            $parameters['keywordPhone'] = '%' . $searchCriteria['keyword'] . '%';
+            $conditions[] = '(name LIKE :keywordName ESCAPE \'!\' OR email LIKE :keywordEmail ESCAPE \'!\' OR phone_number LIKE :keywordPhone ESCAPE \'!\')';
+            $parameters['keywordName'] = InputGuard::makeContainsPattern($searchCriteria['keyword']);
+            $parameters['keywordEmail'] = InputGuard::makeContainsPattern($searchCriteria['keyword']);
+            $parameters['keywordPhone'] = InputGuard::makeContainsPattern($searchCriteria['keyword']);
         }
 
         $statement = $this->connection->prepare(
@@ -125,6 +126,13 @@ class UserService
     public function createUser(array $userData, string $role = User::ROLE_CUSTOMER): int
     {
         $currentTime = date('Y-m-d H:i:s');
+        $this->runWithUniqueEmailCheck(fn () => $this->insertUser($userData, $role, $currentTime));
+
+        return (int) $this->connection->lastInsertId();
+    }
+
+    private function insertUser(array $userData, string $role, string $currentTime): void
+    {
         $statement = $this->connection->prepare(
             'INSERT INTO users (name, email, password_hash, role, shipping_address, phone_number, created_at, updated_at)
              VALUES (:name, :email, :passwordHash, :role, :shippingAddress, :phoneNumber, :createdAt, :updatedAt)'
@@ -139,8 +147,6 @@ class UserService
             'createdAt' => $currentTime,
             'updatedAt' => $currentTime,
         ]);
-
-        return (int) $this->connection->lastInsertId();
     }
 
     /**
@@ -157,14 +163,14 @@ class UserService
                  phone_number = :phoneNumber, updated_at = :updatedAt
              WHERE user_id = :userId'
         );
-        $statement->execute([
+        $this->runWithUniqueEmailCheck(fn () => $statement->execute([
             'name' => $user->getName(),
             'email' => $user->getEmail(),
             'shippingAddress' => $user instanceof Customer ? $user->getShippingAddress() : '',
             'phoneNumber' => $user instanceof Customer ? $user->getPhoneNumber() : '',
             'updatedAt' => date('Y-m-d H:i:s'),
             'userId' => $user->getUserId(),
-        ]);
+        ]));
 
         return $this->findUserById((int) $user->getUserId()) !== null;
     }
@@ -214,6 +220,27 @@ class UserService
         $statement->execute(['userId' => $userId]);
 
         return (int) $statement->fetchColumn();
+    }
+
+    /**
+     * Function/Method Name: runWithUniqueEmailCheck
+     * Purpose:      Turn a duplicate-email database error into a clear message.
+     * Parameters:   callable $saveAction - the INSERT or UPDATE to run
+     * Return Value: void
+     * Description:  The form already checks the email first, but two people can register
+     *               the same email at the same moment. The unique index then refuses the
+     *               second one, and this explains it instead of showing an error page.
+     */
+    private function runWithUniqueEmailCheck(callable $saveAction): void
+    {
+        try {
+            $saveAction();
+        } catch (PDOException $exception) {
+            if ($exception->getCode() === '23000') {
+                throw new BusinessRuleException('This email is already registered. Please log in or use another email.');
+            }
+            throw $exception;
+        }
     }
 
     public function countCustomers(): int

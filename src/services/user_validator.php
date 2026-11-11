@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+require_once __DIR__ . '/input_guard.php';
+
 /**
  * Class Name:  UserValidator
  * Purpose:     Check and convert user input for registration, login, profiles and customer search.
@@ -15,6 +17,7 @@ class UserValidator
     public const MAX_EMAIL_LENGTH = 150;
     public const MAX_ADDRESS_LENGTH = 255;
     public const MIN_PASSWORD_LENGTH = 8;
+    public const MAX_PASSWORD_LENGTH = 72;
 
     private const PHONE_PATTERN = '/^[0-9+\-\s]{7,20}$/';
     private const WHOLE_NUMBER_PATTERN = '/^\d+$/';
@@ -96,6 +99,9 @@ class UserValidator
 
         if (strlen($password) < self::MIN_PASSWORD_LENGTH) {
             $errors['password'] = 'Password must be at least ' . self::MIN_PASSWORD_LENGTH . ' characters.';
+        } elseif (strlen($password) > self::MAX_PASSWORD_LENGTH) {
+            // bcrypt only uses the first 72 bytes; a longer password would be silently cut
+            $errors['password'] = 'Password must be ' . self::MAX_PASSWORD_LENGTH . ' characters or fewer.';
         } elseif (!preg_match('/[A-Za-z]/', $password) || !preg_match('/\d/', $password)) {
             $errors['password'] = 'Password must contain at least one letter and one number.';
         }
@@ -117,10 +123,10 @@ class UserValidator
     public function toUserData(array $formInput): array
     {
         return [
-            'name' => trim((string) ($formInput['name'] ?? '')),
+            'name' => InputGuard::readText($formInput, 'name', self::MAX_NAME_LENGTH),
             'email' => strtolower(trim((string) ($formInput['email'] ?? ''))),
             'password' => (string) ($formInput['password'] ?? ''),
-            'shippingAddress' => trim((string) ($formInput['shippingAddress'] ?? '')),
+            'shippingAddress' => InputGuard::readText($formInput, 'shippingAddress', self::MAX_ADDRESS_LENGTH),
             'phoneNumber' => trim((string) ($formInput['phoneNumber'] ?? '')),
         ];
     }
@@ -134,12 +140,13 @@ class UserValidator
      */
     public function validateSearchInput(array $queryInput): array
     {
+        $errors = InputGuard::validateKeywordLength($queryInput);
         $customerIdText = trim((string) ($queryInput['customerId'] ?? ''));
         if ($customerIdText !== '' && !preg_match(self::WHOLE_NUMBER_PATTERN, $customerIdText)) {
-            return ['customerId' => 'Customer ID must be a whole number, for example 2.'];
+            $errors['customerId'] = 'Customer ID must be a whole number, for example 2.';
         }
 
-        return [];
+        return $errors;
     }
 
     public function toSearchCriteria(array $queryInput): array

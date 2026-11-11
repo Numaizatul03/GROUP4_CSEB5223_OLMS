@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../models/category.php';
 require_once __DIR__ . '/business_rule_exception.php';
+require_once __DIR__ . '/input_guard.php';
 require_once __DIR__ . '/code_generator.php';
 
 /**
@@ -86,10 +87,10 @@ class CategoryService
         }
 
         if (($searchCriteria['keyword'] ?? '') !== '') {
-            $conditions[] = '(c.category_code LIKE :keywordCode OR c.category_name LIKE :keywordName OR c.description LIKE :keywordDescription)';
-            $parameters['keywordCode'] = '%' . $searchCriteria['keyword'] . '%';
-            $parameters['keywordName'] = '%' . $searchCriteria['keyword'] . '%';
-            $parameters['keywordDescription'] = '%' . $searchCriteria['keyword'] . '%';
+            $conditions[] = '(c.category_code LIKE :keywordCode ESCAPE \'!\' OR c.category_name LIKE :keywordName ESCAPE \'!\' OR c.description LIKE :keywordDescription ESCAPE \'!\')';
+            $parameters['keywordCode'] = InputGuard::makeContainsPattern($searchCriteria['keyword']);
+            $parameters['keywordName'] = InputGuard::makeContainsPattern($searchCriteria['keyword']);
+            $parameters['keywordDescription'] = InputGuard::makeContainsPattern($searchCriteria['keyword']);
         }
 
         $searchSql = self::SELECT_CATEGORIES_SQL;
@@ -135,11 +136,11 @@ class CategoryService
         $statement = $this->connection->prepare(
             'INSERT INTO categories (category_code, category_name, description) VALUES (:categoryCode, :categoryName, :description)'
         );
-        $statement->execute([
+        $this->runWithUniqueNameCheck(fn () => $statement->execute([
             'categoryCode' => $this->codeGenerator->makeCategoryCode($categoryData['categoryName'], $takenCodes),
             'categoryName' => $categoryData['categoryName'],
             'description' => $categoryData['description'],
-        ]);
+        ]));
 
         return (int) $this->connection->lastInsertId();
     }
@@ -156,11 +157,11 @@ class CategoryService
         $statement = $this->connection->prepare(
             'UPDATE categories SET category_name = :categoryName, description = :description WHERE category_id = :categoryId'
         );
-        $statement->execute([
+        $this->runWithUniqueNameCheck(fn () => $statement->execute([
             'categoryName' => $category->getCategoryName(),
             'description' => $category->getDescription(),
             'categoryId' => $category->getCategoryId(),
-        ]);
+        ]));
 
         return $this->findCategoryById($category->getCategoryId()) !== null;
     }
@@ -212,6 +213,25 @@ class CategoryService
         $statement->execute(['categoryId' => $categoryId]);
 
         return (int) $statement->fetchColumn();
+    }
+
+    /**
+     * Function/Method Name: runWithUniqueNameCheck
+     * Purpose:      Turn a duplicate category name/code database error into a clear message.
+     * Parameters:   callable $saveAction - the INSERT or UPDATE to run
+     * Return Value: void
+     * Description:  Covers two administrators saving the same name at the same moment.
+     */
+    private function runWithUniqueNameCheck(callable $saveAction): void
+    {
+        try {
+            $saveAction();
+        } catch (PDOException $exception) {
+            if ($exception->getCode() === '23000') {
+                throw new BusinessRuleException('A category with this name already exists. Please choose another name.');
+            }
+            throw $exception;
+        }
     }
 
     public function countCategories(): int

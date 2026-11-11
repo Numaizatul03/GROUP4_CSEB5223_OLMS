@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+require_once __DIR__ . '/input_guard.php';
+
 /**
  * Class Name:  CategoryValidator
  * Purpose:     Check and convert user input for the Category module.
@@ -45,8 +47,8 @@ class CategoryValidator
     public function toCategoryData(array $formInput): array
     {
         return [
-            'categoryName' => trim((string) ($formInput['categoryName'] ?? '')),
-            'description' => trim((string) ($formInput['description'] ?? '')),
+            'categoryName' => InputGuard::readText($formInput, 'categoryName', self::MAX_CATEGORY_NAME_LENGTH),
+            'description' => InputGuard::readText($formInput, 'description', self::MAX_DESCRIPTION_LENGTH),
         ];
     }
 
@@ -61,9 +63,12 @@ class CategoryValidator
     {
         $categoryIdText = trim((string) ($queryInput['categoryId'] ?? ''));
 
-        return $categoryIdText !== '' && !ctype_digit($categoryIdText)
-            ? ['categoryId' => 'Category ID must be a whole number, for example 2.']
-            : [];
+        $errors = InputGuard::validateKeywordLength($queryInput);
+        if ($categoryIdText !== '' && !ctype_digit($categoryIdText)) {
+            $errors['categoryId'] = 'Category ID must be a whole number, for example 2.';
+        }
+
+        return $errors;
     }
 
     public function toSearchCriteria(array $queryInput): array
