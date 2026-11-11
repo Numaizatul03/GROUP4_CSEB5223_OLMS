@@ -188,10 +188,11 @@ final class ApiCatalogController
     private function validateListInput(array $query): array
     {
         $fieldErrors = [];
-        foreach (['page' => self::MAX_PAGE, 'perPage' => self::MAX_PAGE_SIZE] as $fieldName => $maxValue) {
+        $pagingFields = ['page' => ['Page number', self::MAX_PAGE], 'perPage' => ['Products per page', self::MAX_PAGE_SIZE]];
+        foreach ($pagingFields as $fieldName => [$fieldLabel, $maxValue]) {
             $fieldText = InputGuard::readText($query, $fieldName, 10);
             if ($fieldText !== '' && (!ctype_digit($fieldText) || (int) $fieldText < 1 || (int) $fieldText > $maxValue)) {
-                $fieldErrors[$fieldName] = ucfirst($fieldName) . ' must be a whole number from 1 to ' . $maxValue . '.';
+                $fieldErrors[$fieldName] = $fieldLabel . ' must be a whole number from 1 to ' . $maxValue . '.';
             }
         }
 
