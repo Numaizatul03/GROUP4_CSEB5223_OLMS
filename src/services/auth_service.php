@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/user_service.php';
+require_once __DIR__ . '/session_service.php';
 
 /**
  * Class Name:  AuthService
@@ -14,7 +15,7 @@ require_once __DIR__ . '/user_service.php';
  */
 class AuthService
 {
-    private const SESSION_USER_KEY = 'loggedInUserId';
+    private const SESSION_USER_KEY = SessionService::LOGGED_IN_USER_KEY;
 
     private UserService $userService;
     private ?User $currentUser = null;

@@ -13,6 +13,8 @@ declare(strict_types=1);
  */
 
 $defaultConfig = [
+    // Debug mode adds technical details to error messages - keep false except on your own laptop
+    'app_debug' => false,
     'db_driver' => 'mysql',
     'db_host' => '127.0.0.1',
     'db_port' => '3306',
@@ -26,6 +28,7 @@ $localConfigPath = __DIR__ . '/config_local.php';
 $localConfig = is_file($localConfigPath) ? require $localConfigPath : [];
 
 $environmentConfig = array_filter([
+    'app_debug' => getenv('OLMS_APP_DEBUG') === false ? false : getenv('OLMS_APP_DEBUG') === '1',
     'db_driver' => getenv('OLMS_DB_DRIVER'),
     'db_host' => getenv('OLMS_DB_HOST'),
     'db_port' => getenv('OLMS_DB_PORT'),

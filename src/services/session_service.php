@@ -13,6 +13,27 @@ class SessionService
 {
     private const FLASH_KEY = 'flashData';
     private const CSRF_TOKEN_KEY = 'csrfToken';
+    public const LOGGED_IN_USER_KEY = 'loggedInUserId';
+
+    public static function isLoggedIn(): bool
+    {
+        return isset($_SESSION[self::LOGGED_IN_USER_KEY]);
+    }
+
+    /**
+     * Function/Method Name: endLoggedInSession
+     * Purpose:      Log the user out at session level (used by the idle timeout).
+     * Parameters:   none
+     * Return Value: void
+     * Description:  Removes the logged-in user and gives the browser a new session ID.
+     */
+    public static function endLoggedInSession(): void
+    {
+        unset($_SESSION[self::LOGGED_IN_USER_KEY]);
+        if (session_status() === PHP_SESSION_ACTIVE && !headers_sent()) {
+            session_regenerate_id(true);
+        }
+    }
 
     public static function startSession(): void
     {

@@ -9,3 +9,6 @@ src/database/*.sqlite
 .idea/
 .DS_Store
 Thumbs.db
+
+# Error log written by AppLogger (Lab 7 & 8)
+storage/logs/*.log

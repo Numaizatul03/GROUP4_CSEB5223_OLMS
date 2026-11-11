@@ -6,6 +6,7 @@
 
 PRAGMA foreign_keys = ON;
 
+DROP TABLE IF EXISTS rate_limits;
 DROP TABLE IF EXISTS payments;
 DROP TABLE IF EXISTS order_items;
 DROP TABLE IF EXISTS orders;
@@ -91,6 +92,12 @@ CREATE TABLE payments (
     payment_status VARCHAR(20)    NOT NULL,
     amount         DECIMAL(10, 2) NOT NULL,
     payment_date   DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE rate_limits (
+    limiter_key       VARCHAR(160) PRIMARY KEY,
+    attempts          INTEGER      NOT NULL,
+    window_started_at DATETIME     NOT NULL
 );
 
 -- ---------------------------------------------------------------------

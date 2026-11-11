@@ -11,6 +11,7 @@
 CREATE DATABASE IF NOT EXISTS olms CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE olms;
 
+DROP TABLE IF EXISTS rate_limits;
 DROP TABLE IF EXISTS payments;
 DROP TABLE IF EXISTS order_items;
 DROP TABLE IF EXISTS orders;
@@ -138,6 +139,14 @@ CREATE TABLE payments (
     UNIQUE KEY uq_payments_order_id (order_id),
     CONSTRAINT fk_payments_order_id FOREIGN KEY (order_id)
         REFERENCES orders (order_id) ON DELETE CASCADE
+) ENGINE = InnoDB;
+
+-- Attempt counters for RateLimiter (login guessing, API flooding). Not linked to other tables.
+CREATE TABLE rate_limits (
+    limiter_key       VARCHAR(160)  NOT NULL,
+    attempts          INT UNSIGNED  NOT NULL,
+    window_started_at DATETIME      NOT NULL,
+    PRIMARY KEY (limiter_key)
 ) ENGINE = InnoDB;
 
 -- ---------------------------------------------------------------------

@@ -67,6 +67,24 @@ class ProductService
     }
 
     /**
+     * Function/Method Name: findProductByCode
+     * Purpose:      Fetch one product by its readable code (e.g. "FRP-001").
+     * Parameters:   string $productCode - compared without case
+     * Return Value: ?Product - the product, or null when no active product has that code
+     * Description:  Used by the API, where products can be looked up by ID or by code.
+     */
+    public function findProductByCode(string $productCode): ?Product
+    {
+        $statement = $this->connection->prepare(
+            self::SELECT_PRODUCTS_SQL . ' WHERE UPPER(p.product_code) = :productCode AND ' . self::NOT_DELETED_SQL
+        );
+        $statement->execute(['productCode' => strtoupper(trim($productCode))]);
+        $productRow = $statement->fetch();
+
+        return $productRow === false ? null : Product::fromDatabaseRow($productRow);
+    }
+
+    /**
      * Function/Method Name: searchProduct
      * Purpose:      Find products that match the search criteria.
      * Parameters:   array $searchCriteria - any of: productId (int), keyword (string),

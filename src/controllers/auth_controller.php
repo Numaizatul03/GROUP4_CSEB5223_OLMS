@@ -5,6 +5,9 @@ declare(strict_types=1);
 require_once __DIR__ . '/base_controller.php';
 require_once __DIR__ . '/../services/auth_service.php';
 require_once __DIR__ . '/../services/user_validator.php';
+require_once __DIR__ . '/../services/rate_limiter.php';
+require_once __DIR__ . '/../services/input_guard.php';
+require_once __DIR__ . '/../middleware/rate_limit_middleware.php';
 
 /**
  * Class Name:  AuthController
@@ -17,12 +20,21 @@ class AuthController extends BaseController
     private AuthService $authService;
     private UserService $userService;
     private UserValidator $userValidator;
+    private ?RateLimiter $rateLimiter;
+    private string $clientIp;
 
-    public function __construct(AuthService $authService, UserService $userService, UserValidator $userValidator)
-    {
+    public function __construct(
+        AuthService $authService,
+        UserService $userService,
+        UserValidator $userValidator,
+        ?RateLimiter $rateLimiter = null,
+        string $clientIp = '127.0.0.1'
+    ) {
         $this->authService = $authService;
         $this->userService = $userService;
         $this->userValidator = $userValidator;
+        $this->rateLimiter = $rateLimiter;
+        $this->clientIp = $clientIp;
     }
 
     public function showLoginForm(): void
@@ -37,19 +49,31 @@ class AuthController extends BaseController
      * Return Value: void
      * Description:  A wrong email or password shows one general message. After
      *               logging in, the user returns to the page they first asked for,
-     *               or to their home page (shop or dashboard).
+     *               or to their home page (shop or dashboard). Each wrong password is
+     *               counted; after 5 in 15 minutes RateLimitMiddleware locks that email
+     *               on this computer. A correct password clears the count.
      */
     public function loginUser(): void
     {
         $this->requireValidCsrfToken();
         $validationErrors = $this->userValidator->validateLoginInput($_POST);
         $user = $validationErrors === [] ? $this->authService->loginUser((string) $_POST['email'], (string) $_POST['password']) : null;
+        $loginKey = RateLimitMiddleware::makeLoginKey(InputGuard::readText($_POST, 'email', 150), $this->clientIp);
 
         if ($user === null) {
+            $failureCount = $validationErrors === [] ? ($this->rateLimiter?->hit($loginKey, RateLimitMiddleware::LOGIN_WINDOW_SECONDS) ?? 0) : 0;
+            $attemptsLeft = RateLimitMiddleware::LOGIN_MAX_FAILURES - $failureCount;
+            $loginMessage = 'Incorrect email or password. Please try again.';
+            if ($failureCount > 0 && $attemptsLeft <= 2) {
+                $loginMessage .= ' ' . $attemptsLeft . ' attempt(s) left before this account is locked here for 15 minutes.';
+            }
+
             http_response_code(422);
-            $this->renderLoginForm($_POST, $validationErrors ?: ['login' => 'Incorrect email or password. Please try again.']);
+            $this->renderLoginForm($_POST, $validationErrors ?: ['login' => $loginMessage]);
             return;
         }
+
+        $this->rateLimiter?->clear($loginKey);
 
         $returnUrl = (string) ($_POST['returnUrl'] ?? '');
         $homeUrl = buildUrl($user->isAdministrator() ? 'dashboard' : 'shop');
