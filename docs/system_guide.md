@@ -116,10 +116,27 @@ a logged-in user opening the other role's page gets HTTP 403. Customers can only
 | Session fixation | `session_regenerate_id()` on login and logout |
 | Account probing | one message for unknown email and wrong password |
 | Open redirect after login | only relative `index.php?...` return links are accepted |
+| Password guessing | login locked for 15 minutes after 5 wrong passwords (Lab 7) |
+| Shared computers | users idle for 30 minutes are logged out (Lab 7) |
+| Clickjacking / injected scripts | Content-Security-Policy and X-Frame-Options headers (Lab 7) |
 
-## 7. Tests
+## 7. Defensive programming, middleware and API (Lab 7 & 8)
 
-`php tests/run_tests.php` runs 42 tests in 6 suites: ProductService, ProductValidator,
-UserService (registration, login, profile, customer management), CategoryService, and
+- Every web page (`index.php`) and API call (`api.php`) goes through the same 9 middleware
+  steps in `src/middleware/`. The list and order are in [api.md](api.md), section 4.
+- `src/services/input_guard.php` reads input safely: lists are refused, IDs cannot overflow,
+  control characters are removed, and `%` / `_` in searches are matched as normal characters.
+- Unexpected errors show a friendly page with a reference code. The details go to
+  `storage/logs/app.log` (not committed to Git).
+- The JSON API is described in [api.md](api.md). The shop page uses it for the live stock
+  check and for adding to the cart without reloading.
+- After pulling Lab 7 & 8, run `php src/database/setup_database.php` once: it adds the
+  `rate_limits` table used by the login lock and the API limit.
+
+## 8. Tests
+
+`php tests/run_tests.php` runs 57 tests in 7 suites: ProductService, ProductValidator,
+UserService (registration, login, profile, customer management), CategoryService,
 Cart, Order and Payment (cart rules, checkout rollback, payment methods, status flow,
-cancellation restock, refunds, inventory) and Category and Product Codes.
+cancellation restock, refunds, inventory), Category and Product Codes, and
+Defensive Programming, Middleware and API.
